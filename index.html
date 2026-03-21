@@ -1,0 +1,41 @@
+<!-- index.html - PWA HTML Entry Point -->
+<!-- Location: Root directory (/) -->
+<!-- Copy this entire file as-is -->
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>NaariCare – Women's Health Platform</title>
+
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/manifest.json" />
+
+    <!-- Icons -->
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/favicon-192x192.png" />
+    <link rel="icon" type="image/png" sizes="512x512" href="/favicon-512x512.png" />
+
+    <!-- Meta Tags for PWA -->
+    <meta name="description" content="NaariCare - AI-powered women's health platform" />
+    <meta name="theme-color" content="#ec4899" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="NaariCare" />
+
+    <!-- Disable zoom for better PWA experience -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  </head>
+
+  <body>
+    <!-- React App Container -->
+    <div id="root"></div>
+
+    <!-- React & Vite App -->
+    <script type="module" src="/src/main.tsx"></script>
+
+    <!-- PWA install prompt is handled by React via usePWAInstall hook -->
+  </body>
+</html>
