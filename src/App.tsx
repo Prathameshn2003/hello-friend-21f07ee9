@@ -8,8 +8,6 @@ import { AuthProvider } from "@/hooks/useAuth";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { PWAInstallPopup } from "@/components/PWAInstallPopup";
 import { usePWAInstall } from "@/hooks/usePWAInstall";
-import OneSignal from "react-onesignal";
-import { useEffect } from "react";
 
 // Eager load critical pages
 import Index from "./pages/Index";
@@ -68,13 +66,6 @@ const PageLoader = () => (
 );
 
 const AppContent = () => {
-
-  useEffect(() => {
-  OneSignal.init({
-    appId: "113dc13d-e500-4e39-a838-5aec1c460751",
-    allowLocalhostAsSecureOrigin: true,
-  });
-}, []);
   const { showPopup, triggerInstall, dismissPopup } = usePWAInstall();
 
   return (
