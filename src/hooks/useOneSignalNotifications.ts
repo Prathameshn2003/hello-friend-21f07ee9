@@ -151,8 +151,9 @@ export function useOneSignalNotifications() {
       try {
         await os.init({
           appId: OS_APP_ID,
-          notifyButton: { enable: false },   // We use our own UI
-          allowLocalhostAsSecureOrigin: true, // Dev convenience
+          notifyButton: { enable: false },
+          allowLocalhostAsSecureOrigin: true,
+          serviceWorkerPath: "/Onesignalsdkworker.js",
         });
 
         const sub = os.User.PushSubscription;
