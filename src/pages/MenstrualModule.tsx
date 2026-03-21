@@ -392,42 +392,95 @@ const MenstrualModule = () => {
                 <div className="w-12 h-12 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center mx-auto mb-3">
                   <Bell className="w-6 h-6 text-primary" />
                 </div>
-                <h2 className="font-heading text-lg font-bold text-foreground">Push Notifications</h2>
+                <h2 className="font-heading text-lg font-bold text-foreground">Period Reminders</h2>
                 <p className="text-xs text-muted-foreground mt-1">
-                  Period &amp; ovulation reminders via OneSignal — free, no spam
+                  Never be caught off guard — get timely push notifications
                 </p>
               </div>
 
+              {/* Step-by-step guide for new users */}
+              {!os.isSubscribed && !os.isLoading && os.permissionState !== "denied"
+                && !os.error?.includes("VITE_ONESIGNAL_APP_ID") && (
+                <Card className="border-primary/15 shadow-md overflow-hidden">
+                  <div className="h-1 bg-gradient-to-r from-primary via-teal to-accent" />
+                  <CardContent className="p-5 space-y-4">
+                    <h3 className="font-heading text-sm font-bold text-foreground flex items-center gap-2">
+                      <Info className="w-4 h-4 text-primary" />
+                      How to set up reminders
+                    </h3>
+                    {[
+                      { step: "1", emoji: "✅", title: "Enable notifications", desc: "Tap the button below — your browser will ask permission" },
+                      { step: "2", emoji: "📝", title: "Run your assessment", desc: "Go to the Assess tab and fill in your cycle details" },
+                      { step: "3", emoji: "📅", title: "Choose when to be reminded", desc: "Pick 5, 3, 2, or 1 day before your period" },
+                      { step: "4", emoji: "🔔", title: "Schedule & relax", desc: "Tap Schedule — you'll get a push notification on the selected days" },
+                    ].map((item) => (
+                      <div key={item.step} className="flex items-start gap-3">
+                        <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                          <span className="text-xs font-bold text-primary">{item.step}</span>
+                        </div>
+                        <div>
+                          <p className="text-xs font-semibold text-foreground">{item.emoji} {item.title}</p>
+                          <p className="text-[11px] text-muted-foreground mt-0.5">{item.desc}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </CardContent>
+                </Card>
+              )}
+
               {/* Browser not supported */}
               {!os.isLoading && !os.isSupported && (
-                <div className="rounded-2xl border border-dashed border-border p-5 text-center space-y-2">
-                  <BellOff className="w-8 h-8 text-muted-foreground/30 mx-auto" />
-                  <p className="text-sm text-muted-foreground">
-                    Push notifications are not supported in this browser.
-                  </p>
-                </div>
+                <Card className="border-destructive/20">
+                  <CardContent className="p-5 text-center space-y-2">
+                    <BellOff className="w-8 h-8 text-muted-foreground/30 mx-auto" />
+                    <p className="text-sm font-semibold text-foreground">Browser Not Supported</p>
+                    <p className="text-xs text-muted-foreground">
+                      Push notifications aren't available in this browser. Try Chrome, Firefox, or Edge on desktop/Android.
+                    </p>
+                  </CardContent>
+                </Card>
               )}
 
               {/* Env key missing */}
               {!os.isLoading && os.error?.includes("VITE_ONESIGNAL_APP_ID") && (
-                <div className="rounded-2xl border border-destructive/20 bg-destructive/5 p-4 space-y-2">
-                  <div className="flex items-center gap-2 text-destructive">
-                    <AlertTriangle className="w-4 h-4" />
-                    <span className="text-sm font-semibold">OneSignal not configured</span>
-                  </div>
-                  <p className="text-xs text-muted-foreground leading-relaxed">
-                    Add{" "}
-                    <code className="bg-muted px-1 rounded text-xs">VITE_ONESIGNAL_APP_ID=your_app_id</code>
-                    {" "}to your <code className="bg-muted px-1 rounded text-xs">.env</code>.
-                    Get a free App ID at{" "}
-                    <a href="https://onesignal.com" target="_blank" rel="noopener noreferrer"
-                      className="text-primary underline underline-offset-2">onesignal.com</a>.
-                  </p>
-                </div>
+                <Card className="border-destructive/20 bg-destructive/5">
+                  <CardContent className="p-4 space-y-2">
+                    <div className="flex items-center gap-2 text-destructive">
+                      <AlertTriangle className="w-4 h-4" />
+                      <span className="text-sm font-semibold">Setup Required</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      The notification service is not configured yet. Please contact the administrator.
+                    </p>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* OneSignal web push not configured */}
+              {!os.isLoading && os.error === "ONESIGNAL_WEB_PUSH_NOT_CONFIGURED" && (
+                <Card className="border-amber-500/20 bg-amber-50/50 dark:bg-amber-950/20">
+                  <CardContent className="p-5 space-y-3">
+                    <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400">
+                      <AlertTriangle className="w-5 h-5" />
+                      <span className="text-sm font-bold">Web Push Not Configured</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      The OneSignal app needs to be configured for <strong>Web Push</strong>. 
+                      To fix this:
+                    </p>
+                    <ol className="text-xs text-muted-foreground space-y-1.5 list-decimal list-inside">
+                      <li>Go to <a href="https://dashboard.onesignal.com" target="_blank" rel="noopener noreferrer" className="text-primary underline underline-offset-2">OneSignal Dashboard</a></li>
+                      <li>Open your app → <strong>Settings → Platforms</strong></li>
+                      <li>Add <strong>Web Push</strong> platform</li>
+                      <li>Set your site URL and save</li>
+                      <li>Refresh this page</li>
+                    </ol>
+                  </CardContent>
+                </Card>
               )}
 
               {/* Subscription card */}
-              {os.isSupported && !os.error?.includes("VITE_ONESIGNAL_APP_ID") && (
+              {os.isSupported && !os.error?.includes("VITE_ONESIGNAL_APP_ID") && os.error !== "ONESIGNAL_WEB_PUSH_NOT_CONFIGURED" && (
                 <div className={cn(
                   "relative rounded-2xl p-5 overflow-hidden border",
                   os.isSubscribed
@@ -450,23 +503,19 @@ const MenstrualModule = () => {
                         }
                       </div>
                       <div>
-                        <h3 className="font-heading text-sm font-bold text-foreground">Period Reminders</h3>
+                        <h3 className="font-heading text-sm font-bold text-foreground">
+                          {os.isSubscribed ? "✅ Notifications Active" : "Enable Notifications"}
+                        </h3>
                         <p className="text-[11px] text-muted-foreground mt-0.5">
                           {os.isSubscribed
-                            ? "Push notifications active via OneSignal"
-                            : "Get notified before your period starts"}
+                            ? "You'll receive reminders before your period"
+                            : "One tap to start receiving period reminders"}
                         </p>
                       </div>
                     </div>
-                    <Badge variant="secondary" className={cn(
-                      "text-[10px] px-2 py-1 flex-shrink-0",
-                      os.isSubscribed ? "bg-teal/10 text-teal border-teal/20" : "bg-muted text-muted-foreground",
-                    )}>
-                      <Sparkles className="w-2.5 h-2.5 mr-1" />Free
-                    </Badge>
                   </div>
 
-                  {/* Status row */}
+                  {/* Action row */}
                   <div className="mt-4 flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <div className={cn("w-2 h-2 rounded-full",
@@ -476,37 +525,40 @@ const MenstrualModule = () => {
                         : "bg-muted-foreground",
                       )} />
                       <span className="text-xs text-muted-foreground">
-                        {os.isLoading                     ? "Initializing…"
-                        : os.isSubscribed                 ? "Subscribed"
-                        : os.permissionState === "denied" ? "Permission denied"
-                        : "Not subscribed"}
+                        {os.isLoading                     ? "Connecting…"
+                        : os.isSubscribed                 ? "Connected & receiving"
+                        : os.permissionState === "denied" ? "Blocked by browser"
+                        : "Not connected"}
                       </span>
                     </div>
 
                     {!os.isSubscribed && !os.isLoading && os.permissionState !== "denied" && (
                       <Button
                         size="sm" onClick={() => os.subscribe()} disabled={!os.isInitialized}
-                        className="h-8 text-xs gap-1.5 shadow-md shadow-primary/20"
+                        className="h-9 text-xs gap-1.5 shadow-md shadow-primary/20 px-5"
                       >
-                        <Bell className="w-3.5 h-3.5" /> Enable
+                        <Bell className="w-3.5 h-3.5" /> Enable Now
                       </Button>
                     )}
 
                     {os.isSubscribed && (
                       <Button size="sm" variant="ghost" onClick={os.unsubscribe}
                         className="h-8 text-xs text-muted-foreground gap-1.5">
-                        <BellOff className="w-3 h-3" /> Disable
+                        <BellOff className="w-3 h-3" /> Turn Off
                       </Button>
                     )}
                   </div>
 
-                  {/* Permission denied */}
+                  {/* Permission denied help */}
                   {os.permissionState === "denied" && (
-                    <div className="mt-3 flex items-start gap-2 p-2.5 rounded-xl bg-destructive/5 border border-destructive/15">
+                    <div className="mt-3 flex items-start gap-2 p-3 rounded-xl bg-destructive/5 border border-destructive/15">
                       <AlertTriangle className="w-3.5 h-3.5 text-destructive flex-shrink-0 mt-0.5" />
-                      <p className="text-[11px] text-muted-foreground leading-relaxed">
-                        Notifications are blocked. Enable them in your browser settings, then refresh.
-                      </p>
+                      <div>
+                        <p className="text-[11px] font-semibold text-foreground">Notifications blocked</p>
+                        <p className="text-[11px] text-muted-foreground leading-relaxed mt-0.5">
+                          Your browser has blocked notifications. To fix: click the 🔒 icon in your address bar → Allow notifications → Refresh.
+                        </p>
+                      </div>
                     </div>
                   )}
                 </div>
@@ -522,7 +574,7 @@ const MenstrualModule = () => {
                         <Calendar className="w-4 h-4 text-primary" />
                       </div>
                       <div>
-                        <p className="text-[11px] text-muted-foreground">Next period predicted</p>
+                        <p className="text-[11px] text-muted-foreground">Your next period is predicted on</p>
                         <p className="text-sm font-bold text-foreground">{result.next_date}</p>
                       </div>
                       <Badge variant="secondary" className="ml-auto bg-primary/10 text-primary border-primary/20 text-[10px]">
@@ -533,26 +585,34 @@ const MenstrualModule = () => {
 
                   {/* No assessment nudge */}
                   {!result && (
-                    <div className="flex items-start gap-3 p-3.5 rounded-2xl bg-muted/30 border border-dashed border-border">
-                      <Info className="w-4 h-4 text-muted-foreground flex-shrink-0 mt-0.5" />
-                      <div>
-                        <p className="text-xs font-semibold text-foreground">Complete assessment first</p>
-                        <p className="text-[11px] text-muted-foreground mt-0.5">
-                          Run the health assessment to get your predicted period date, then schedule reminders here.
-                        </p>
-                        <Button size="sm" variant="outline" className="mt-2 h-7 text-xs gap-1"
-                          onClick={() => setTab("assess")}>
-                          <Heart className="w-3 h-3" /> Go to Assessment
-                        </Button>
-                      </div>
-                    </div>
+                    <Card className="border-amber-500/20 bg-amber-50/30 dark:bg-amber-950/10">
+                      <CardContent className="p-4 flex items-start gap-3">
+                        <div className="w-9 h-9 rounded-xl bg-amber-500/10 flex items-center justify-center flex-shrink-0">
+                          <Heart className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+                        </div>
+                        <div>
+                          <p className="text-xs font-bold text-foreground">Step 2: Run your assessment</p>
+                          <p className="text-[11px] text-muted-foreground mt-0.5">
+                            Fill in your cycle details so we can predict your next period and schedule reminders.
+                          </p>
+                          <Button size="sm" variant="outline" className="mt-2 h-7 text-xs gap-1"
+                            onClick={() => setTab("assess")}>
+                            <Heart className="w-3 h-3" /> Go to Assessment
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
                   )}
 
                   {/* Reminder timing grid */}
                   <div className="space-y-2">
-                    <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider px-1">
-                      Remind me before period
+                    <h4 className="text-xs font-semibold text-foreground flex items-center gap-2 px-1">
+                      <Bell className="w-3.5 h-3.5 text-primary" />
+                      When should we remind you?
                     </h4>
+                    <p className="text-[11px] text-muted-foreground px-1 -mt-1">
+                      Select which days before your period you'd like a notification
+                    </p>
                     <div className="grid grid-cols-2 gap-2">
                       {REMINDER_OPTIONS.map(opt => {
                         const active = selectedDays.includes(opt.days);
@@ -589,8 +649,8 @@ const MenstrualModule = () => {
                     <div className="flex items-center gap-3">
                       <span className="text-xl">🥚</span>
                       <div>
-                        <p className="text-xs font-semibold text-foreground">Ovulation reminder</p>
-                        <p className="text-[10px] text-muted-foreground">Notify on estimated fertile window</p>
+                        <p className="text-xs font-semibold text-foreground">Fertile window alert</p>
+                        <p className="text-[10px] text-muted-foreground">Get notified when your fertile window starts</p>
                       </div>
                     </div>
                     <Switch checked={includeOvulation}
@@ -598,57 +658,45 @@ const MenstrualModule = () => {
                   </div>
 
                   {/* Schedule button */}
-                  <Button className="w-full h-12 gap-2 shadow-lg shadow-primary/20"
+                  <Button className="w-full h-12 gap-2 shadow-lg shadow-primary/20 text-sm"
                     onClick={handleScheduleReminders}
                     disabled={scheduling || scheduled || selectedDays.length === 0 || !predictedStartDate}>
                     {scheduling ? (
-                      <><Loader2 className="w-4 h-4 animate-spin" /> Scheduling…</>
+                      <><Loader2 className="w-4 h-4 animate-spin" /> Scheduling your reminders…</>
                     ) : scheduled ? (
-                      <><CheckCircle2 className="w-4 h-4" /> {os.scheduledCount} Reminder{os.scheduledCount !== 1 ? "s" : ""} Scheduled!</>
+                      <><CheckCircle2 className="w-4 h-4" /> ✅ {os.scheduledCount} Reminder{os.scheduledCount !== 1 ? "s" : ""} Set!</>
                     ) : (
-                      <><BellRing className="w-4 h-4" /> Schedule Reminders</>
+                      <><BellRing className="w-4 h-4" /> Schedule My Reminders</>
                     )}
                   </Button>
 
-                  {!predictedStartDate && (
-                    <p className="text-center text-xs text-muted-foreground -mt-2">
-                      Complete the assessment first to enable scheduling.
+                  {!predictedStartDate && selectedDays.length > 0 && (
+                    <p className="text-center text-[11px] text-amber-600 dark:text-amber-400 -mt-2 flex items-center justify-center gap-1">
+                      <Info className="w-3 h-3" />
+                      Complete the assessment first to schedule reminders
                     </p>
                   )}
 
                   {/* Test notification */}
-                  <button onClick={handleTestNotification} disabled={testSent}
-                    className="w-full flex items-center justify-center gap-1.5 py-2 text-xs text-muted-foreground hover:text-foreground transition-colors">
-                    {testSent
-                      ? <><CheckCircle2 className="w-3.5 h-3.5 text-teal" /> Test notification sent!</>
-                      : <><Zap className="w-3.5 h-3.5" /> Send a test notification</>
-                    }
-                  </button>
+                  <div className="border border-dashed border-border rounded-xl p-3 text-center">
+                    <button onClick={handleTestNotification} disabled={testSent}
+                      className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors">
+                      {testSent
+                        ? <><CheckCircle2 className="w-3.5 h-3.5 text-teal" /> Test sent — check your notifications!</>
+                        : <><Zap className="w-3.5 h-3.5" /> Send a test notification to verify it works</>
+                      }
+                    </button>
+                  </div>
                 </>
               )}
 
-              {/* How it works — unsubscribed state */}
-              {!os.isSubscribed && !os.isLoading && os.permissionState !== "denied"
-                && !os.error?.includes("VITE_ONESIGNAL_APP_ID") && (
-                <div className="rounded-xl border border-dashed border-border p-4 space-y-3">
-                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">How it works</p>
-                  {[
-                    { emoji: "🔔", text: "Click Enable above to allow notifications" },
-                    { emoji: "📅", text: "We'll remind you 5, 3 & 1 day before your period" },
-                    { emoji: "🥚", text: "Optionally get ovulation window alerts" },
-                    { emoji: "🔒", text: "Powered by OneSignal — free & privacy-first" },
-                  ].map((item, i) => (
-                    <div key={i} className="flex items-start gap-2.5">
-                      <span className="text-base leading-none mt-0.5">{item.emoji}</span>
-                      <p className="text-xs text-muted-foreground leading-relaxed">{item.text}</p>
-                    </div>
-                  ))}
-                </div>
-              )}
-
               {/* Generic SDK error */}
-              {os.error && !os.error.includes("VITE_ONESIGNAL") && (
-                <p className="text-xs text-destructive text-center">{os.error}</p>
+              {os.error && !os.error.includes("VITE_ONESIGNAL") && os.error !== "ONESIGNAL_WEB_PUSH_NOT_CONFIGURED" && (
+                <Card className="border-destructive/20">
+                  <CardContent className="p-3 text-center">
+                    <p className="text-xs text-destructive">{os.error}</p>
+                  </CardContent>
+                </Card>
               )}
 
             </div>
