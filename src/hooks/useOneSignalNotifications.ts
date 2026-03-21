@@ -177,12 +177,20 @@ export function useOneSignalNotifications() {
             playerId: os.User.PushSubscription.id,
           }));
         });
-      } catch (err) {
+      } catch (err: unknown) {
+        const errMsg = err instanceof Error ? err.message : String(err);
+        const errorObj = typeof err === 'object' && err !== null && '_type' in err
+          ? (err as { value?: { message?: string } }).value?.message ?? errMsg
+          : errMsg;
         console.error("[OneSignal] Init error:", err);
+        
+        const isWebPushNotConfigured = errorObj.toLowerCase().includes("not configured for web push");
         setState(s => ({
           ...s,
           isLoading: false,
-          error: "Failed to initialize push notifications.",
+          error: isWebPushNotConfigured
+            ? "ONESIGNAL_WEB_PUSH_NOT_CONFIGURED"
+            : `Failed to initialize push notifications: ${errorObj}`,
         }));
       }
     });
