@@ -69,7 +69,19 @@ export const HealthResourceForm = ({ resource, onSuccess, onCancel }: HealthReso
       <h2 className="font-heading text-xl font-semibold">{resource ? "Edit" : "Add"} Health Resource</h2>
       <form onSubmit={handleSubmit} className="space-y-4 max-w-2xl">
         <div><Label>Title *</Label><Input value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} required /></div>
-        <div><Label>Category</Label><Input value={form.category} onChange={e => setForm(f => ({ ...f, category: e.target.value }))} /></div>
+        <div>
+          <Label>Category *</Label>
+          <Select value={form.category} onValueChange={v => setForm(f => ({ ...f, category: v }))}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="General">General</SelectItem>
+              <SelectItem value="Menstrual">Menstrual</SelectItem>
+              <SelectItem value="PCOS">PCOS</SelectItem>
+              <SelectItem value="Menopause">Menopause</SelectItem>
+              <SelectItem value="General Wellness">General Wellness</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
         <div>
           <Label>Status</Label>
           <Select value={form.status} onValueChange={v => setForm(f => ({ ...f, status: v }))}>
@@ -81,7 +93,11 @@ export const HealthResourceForm = ({ resource, onSuccess, onCancel }: HealthReso
           </Select>
         </div>
         <div><Label>Description</Label><Textarea value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} /></div>
-        <div><Label>External Link</Label><Input value={form.external_link} onChange={e => setForm(f => ({ ...f, external_link: e.target.value }))} /></div>
+        <div><Label>External Link</Label><Input value={form.external_link} onChange={e => setForm(f => ({ ...f, external_link: e.target.value }))} placeholder="https://..." /></div>
+        <div className="flex items-center gap-2">
+          <input type="checkbox" id="is_active" checked={form.is_active} onChange={e => setForm(f => ({ ...f, is_active: e.target.checked }))} className="rounded border-border" />
+          <Label htmlFor="is_active">Active (visible to users)</Label>
+        </div>
         <Button type="submit" disabled={loading}>{loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}{resource ? "Update" : "Create"}</Button>
       </form>
     </div>
