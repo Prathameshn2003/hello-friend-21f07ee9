@@ -28,21 +28,34 @@ export const HealthResourceForm = ({ resource, onSuccess, onCancel }: HealthReso
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.title.trim()) return;
+    if (!form.title.trim() || !form.category.trim()) {
+      toast({ title: "Missing fields", description: "Title and category are required", variant: "destructive" });
+      return;
+    }
     setLoading(true);
     try {
+      const payload = {
+        title: form.title.trim(),
+        description: form.description.trim() || null,
+        category: form.category.trim(),
+        external_link: form.external_link.trim() || null,
+        status: form.status,
+        is_active: form.is_active,
+      };
+
       if (resource) {
-        const { error } = await supabase.from("health_resources").update(form).eq("id", resource.id);
+        const { error } = await supabase.from("health_resources").update(payload).eq("id", resource.id);
         if (error) throw error;
         toast({ title: "Resource updated" });
       } else {
-        const { error } = await supabase.from("health_resources").insert(form);
+        const { error } = await supabase.from("health_resources").insert(payload);
         if (error) throw error;
         toast({ title: "Resource created" });
       }
       onSuccess();
     } catch (error: any) {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
+      console.error("Health resource save error:", error);
+      toast({ title: "Error saving resource", description: error.message || "Please try again", variant: "destructive" });
     } finally {
       setLoading(false);
     }
