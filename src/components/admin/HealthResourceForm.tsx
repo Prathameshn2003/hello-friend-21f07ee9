@@ -23,6 +23,7 @@ export const HealthResourceForm = ({ resource, onSuccess, onCancel }: HealthReso
     category: resource?.category || "General",
     external_link: resource?.external_link || "",
     status: resource?.status || "Draft",
+    is_active: resource?.is_active ?? true,
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
