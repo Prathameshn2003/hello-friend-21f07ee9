@@ -1,134 +1,83 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Sparkles, Shield, Heart, Star, CheckCircle2 } from "lucide-react";
-import { motion } from "framer-motion";
+import { ArrowRight, Sparkles, Shield, Heart } from "lucide-react";
 
 export const HeroSection = () => {
   return (
-    <section className="relative min-h-[100vh] flex items-center justify-center overflow-hidden hero-gradient pt-20 pb-8">
-      {/* Animated Background Orbs */}
+    <section className="relative min-h-screen flex items-center justify-center overflow-hidden hero-gradient pt-20">
+      {/* Background Decorations */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <motion.div
-          className="absolute top-16 left-[5%] w-64 h-64 rounded-full blur-3xl"
-          style={{ background: 'radial-gradient(circle, hsl(345 58% 62% / 0.25), transparent 70%)' }}
-          animate={{ y: [-10, 15, -10], x: [-5, 10, -5], scale: [1, 1.1, 1] }}
-          transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-        />
-        <motion.div
-          className="absolute bottom-32 right-[8%] w-80 h-80 rounded-full blur-3xl"
-          style={{ background: 'radial-gradient(circle, hsl(170 45% 42% / 0.2), transparent 70%)' }}
-          animate={{ y: [10, -15, 10], x: [5, -10, 5], scale: [1.1, 1, 1.1] }}
-          transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
-        />
-        <motion.div
-          className="absolute top-1/3 right-[30%] w-48 h-48 rounded-full blur-3xl"
-          style={{ background: 'radial-gradient(circle, hsl(12 85% 62% / 0.15), transparent 70%)' }}
-          animate={{ y: [5, -20, 5], scale: [1, 1.15, 1] }}
-          transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
-        />
-        {/* Subtle grid pattern */}
-        <div className="absolute inset-0 opacity-[0.015]" style={{
-          backgroundImage: `radial-gradient(circle at 1px 1px, hsl(var(--foreground)) 1px, transparent 0)`,
-          backgroundSize: '40px 40px'
-        }} />
+        <div className="absolute top-20 left-10 w-72 h-72 bg-primary/30 rounded-full blur-3xl animate-float" />
+        <div className="absolute bottom-20 right-10 w-96 h-96 bg-secondary/40 rounded-full blur-3xl animate-float delay-200" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-accent/10 rounded-full blur-3xl" />
       </div>
 
       <div className="container mx-auto px-4 relative z-10">
         <div className="max-w-4xl mx-auto text-center">
-          {/* Floating Badge */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.1 }}
-            className="inline-flex items-center gap-2.5 px-5 py-2.5 rounded-full bg-card/70 backdrop-blur-md border border-primary/20 mb-8 shadow-sm"
-          >
-            <span className="flex h-2 w-2 relative">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-teal opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-teal"></span>
-            </span>
-            <span className="text-sm font-medium text-foreground">
+          {/* Badge */}
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-card/80 backdrop-blur-sm border border-border/50 mb-8 animate-fade-up">
+            <Sparkles className="w-4 h-4 text-accent" />
+            <span className="text-sm font-medium text-muted-foreground">
               AI-Powered Women's Health Platform
             </span>
-            <Sparkles className="w-4 h-4 text-gold" />
-          </motion.div>
+          </div>
 
           {/* Headline */}
-          <motion.h1
-            initial={{ opacity: 0, y: 24 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.2 }}
-            className="font-heading text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-foreground leading-[1.1] mb-6"
-          >
-            Your Health,{" "}
-            <span className="gradient-text">Reimagined</span>
-            <br />
-            <span className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl opacity-90">
-              with Intelligence & Care
-            </span>
-          </motion.h1>
+          <h1 className="font-heading text-4xl md:text-5xl lg:text-6xl font-bold text-foreground leading-tight mb-6 animate-fade-up delay-100">
+            Your Body. Your Health.{" "}
+            <span className="gradient-text">Your NaariCare.</span>
+          </h1>
 
           {/* Subheadline */}
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.35 }}
-            className="text-base sm:text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-10 leading-relaxed"
-          >
-            Track your cycle, predict health risks, and get personalized insights — 
-            all in one beautiful, private platform designed for <strong className="text-foreground">every woman</strong>.
-          </motion.p>
+          <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-10 animate-fade-up delay-200">
+            Intelligent health insights, personalized predictions, and empowering 
+            guidance for every stage of your wellness journey.
+          </p>
 
           {/* CTAs */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.45 }}
-            className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-14"
-          >
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16 animate-fade-up delay-300">
             <Link to="/signup">
-              <Button variant="hero" size="xl" className="group min-w-[200px]">
-                Start Free Today
-                <ArrowRight className="w-5 h-5 group-hover:translate-x-1.5 transition-transform duration-300" />
+              <Button variant="hero" size="xl" className="group">
+                Get Started Free
+                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </Button>
             </Link>
             <Link to="/modules">
-              <Button variant="glass" size="xl" className="min-w-[200px]">
-                Explore Modules
+              <Button variant="glass" size="xl">
+                Explore Health Modules
               </Button>
             </Link>
-          </motion.div>
+          </div>
 
-          {/* Trust Row */}
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.55 }}
-            className="flex flex-wrap items-center justify-center gap-6 md:gap-10"
-          >
-            {[
-              { icon: Sparkles, label: "AI-Powered Predictions", color: "text-primary" },
-              { icon: Heart, label: "Doctor-Backed Insights", color: "text-accent" },
-              { icon: Shield, label: "100% Private & Secure", color: "text-teal" },
-              { icon: Star, label: "Trusted by Thousands", color: "text-gold" },
-            ].map((item) => (
-              <div key={item.label} className="flex items-center gap-2.5 group cursor-default">
-                <div className={`w-9 h-9 rounded-xl bg-card border border-border/50 flex items-center justify-center shadow-xs group-hover:shadow-md transition-shadow duration-300`}>
-                  <item.icon className={`w-4 h-4 ${item.color}`} />
-                </div>
-                <span className="text-sm font-medium text-muted-foreground group-hover:text-foreground transition-colors">
-                  {item.label}
-                </span>
+          {/* Trust Indicators */}
+          <div className="flex flex-wrap items-center justify-center gap-8 animate-fade-up delay-400">
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
+                <Sparkles className="w-5 h-5 text-primary" />
               </div>
-            ))}
-          </motion.div>
+              <span className="text-sm font-medium">AI-Backed</span>
+            </div>
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <div className="w-10 h-10 rounded-full bg-teal/20 flex items-center justify-center">
+                <Heart className="w-5 h-5 text-teal" />
+              </div>
+              <span className="text-sm font-medium">Doctor-Inspired</span>
+            </div>
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <div className="w-10 h-10 rounded-full bg-secondary/40 flex items-center justify-center">
+                <Shield className="w-5 h-5 text-secondary-foreground" />
+              </div>
+              <span className="text-sm font-medium">Privacy-First</span>
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Bottom Curve */}
+      {/* Bottom Wave */}
       <div className="absolute bottom-0 left-0 right-0">
-        <svg viewBox="0 0 1440 80" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full" preserveAspectRatio="none">
+        <svg viewBox="0 0 1440 120" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full">
           <path
-            d="M0 80L48 74C96 68 192 56 288 48C384 40 480 36 576 38C672 40 768 48 864 52C960 56 1056 56 1152 52C1248 48 1344 40 1392 36L1440 32V80H0Z"
+            d="M0 120L60 110C120 100 240 80 360 70C480 60 600 60 720 65C840 70 960 80 1080 85C1200 90 1320 90 1380 90L1440 90V120H1380C1320 120 1200 120 1080 120C960 120 840 120 720 120C600 120 480 120 360 120C240 120 120 120 60 120H0Z"
             fill="hsl(var(--background))"
           />
         </svg>
