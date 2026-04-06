@@ -99,6 +99,11 @@ const Dashboard = () => {
       : (cycleLogs.length > 0 ? `${insights.averageCycleLength} days` : null);
     const menstrualMetricLabel = menstrualAssessment ? "Risk Score" : "Average Cycle";
 
+    const predictedDate = prediction?.predicted_start_date 
+      ? format(parseISO(prediction.predicted_start_date), "dd MMM yyyy")
+      : null;
+    const daysUntil = prediction?.days_until;
+
     return [
       {
         title: "Menstrual Health",
@@ -113,6 +118,8 @@ const Dashboard = () => {
         metric: menstrualMetric,
         metricLabel: menstrualMetricLabel,
         hasData: !!menstrualAssessment || cycleLogs.length > 0,
+        predictedDate,
+        daysUntil,
       },
       {
         title: "PCOS Risk",
