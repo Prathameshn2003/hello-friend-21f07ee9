@@ -230,8 +230,8 @@ const Dashboard = () => {
                 {card.hasData ? (
                   <>
                     <p className={`text-sm font-medium ${card.statusColor} mb-3`}>{card.status}</p>
-                    {card.predictedDate && (
-                      <div className="mb-3 px-3 py-2 rounded-lg bg-primary/5 border border-primary/10">
+                    {card.predictedDate ? (
+                      <div className="pt-3 border-t border-border px-3 py-2 rounded-lg bg-primary/5 border-primary/10">
                         <div className="flex items-center gap-1.5 mb-0.5">
                           <Calendar className="w-3.5 h-3.5 text-primary" />
                           <span className="text-xs font-medium text-primary">Next Period</span>
@@ -241,11 +241,12 @@ const Dashboard = () => {
                           <div className="text-xs text-muted-foreground">{card.daysUntil} days away</div>
                         )}
                       </div>
-                    )}
-                    <div className="pt-3 border-t border-border">
-                      <div className="text-xl font-bold gradient-text">{card.metric}</div>
-                      <div className="text-xs text-muted-foreground mt-0.5">{card.metricLabel}</div>
-                    </div>
+                    ) : !card.predictedDate && card.metric ? (
+                      <div className="pt-3 border-t border-border">
+                        <div className="text-xl font-bold gradient-text">{card.metric}</div>
+                        <div className="text-xs text-muted-foreground mt-0.5">{card.metricLabel}</div>
+                      </div>
+                    ) : null}
                   </>
                 ) : (
                   <div className="mt-2">
