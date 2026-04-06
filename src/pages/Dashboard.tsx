@@ -146,7 +146,7 @@ const Dashboard = () => {
         hasData: !!menopauseAssessment,
       },
     ];
-  }, [cycleData, cycleLogs, insights, pcosAssessment, menopauseAssessment, menstrualAssessment]);
+  }, [cycleData, cycleLogs, insights, pcosAssessment, menopauseAssessment, menstrualAssessment, prediction]);
 
   if (loading) {
     return (
