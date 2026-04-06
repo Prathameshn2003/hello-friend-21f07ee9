@@ -25,7 +25,7 @@ interface MenopauseResultsDisplayProps {
   onRestart: () => void;
 }
 
-export const MenopauseResultsDisplay = ({ result, onFindDoctors, onRestart }: MenopauseResultsDisplayProps) => {
+export const MenopauseResultsDisplay = ({ result, onFindDoctors, onRestart }: MenopauseResultsDisplayProps & { inputData?: any }) => {
   const { stage, riskPercentage, hasMenopauseSymptoms, breakdown, recommendations } = result;
 
   const stageConfig = {
