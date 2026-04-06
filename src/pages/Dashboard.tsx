@@ -9,7 +9,7 @@ import { Link } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useCycleTracking } from "@/hooks/useCycleTracking";
 import { useHealthAssessments } from "@/hooks/useHealthAssessments";
-import { differenceInDays, parseISO } from "date-fns";
+import { differenceInDays, parseISO, format } from "date-fns";
 import { useMemo } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -47,7 +47,7 @@ const getMenopauseStage = (category: string | null) => {
 
 const Dashboard = () => {
   const { user } = useAuth();
-  const { cycleLogs, loading: cycleLoading, insights } = useCycleTracking();
+  const { cycleLogs, loading: cycleLoading, insights, prediction } = useCycleTracking();
   const { pcosAssessment, menopauseAssessment, menstrualAssessment, loading: assessmentLoading } = useHealthAssessments();
   const userName = user?.user_metadata?.full_name?.split(' ')[0] || 'there';
   const loading = cycleLoading || assessmentLoading;
@@ -99,6 +99,11 @@ const Dashboard = () => {
       : (cycleLogs.length > 0 ? `${insights.averageCycleLength} days` : null);
     const menstrualMetricLabel = menstrualAssessment ? "Risk Score" : "Average Cycle";
 
+    const predictedDate = prediction?.predicted_start_date 
+      ? format(parseISO(prediction.predicted_start_date), "dd MMM yyyy")
+      : null;
+    const daysUntil = prediction?.days_until;
+
     return [
       {
         title: "Menstrual Health",
@@ -113,6 +118,8 @@ const Dashboard = () => {
         metric: menstrualMetric,
         metricLabel: menstrualMetricLabel,
         hasData: !!menstrualAssessment || cycleLogs.length > 0,
+        predictedDate,
+        daysUntil,
       },
       {
         title: "PCOS Risk",
@@ -139,7 +146,7 @@ const Dashboard = () => {
         hasData: !!menopauseAssessment,
       },
     ];
-  }, [cycleData, cycleLogs, insights, pcosAssessment, menopauseAssessment, menstrualAssessment]);
+  }, [cycleData, cycleLogs, insights, pcosAssessment, menopauseAssessment, menstrualAssessment, prediction]);
 
   if (loading) {
     return (
@@ -223,6 +230,18 @@ const Dashboard = () => {
                 {card.hasData ? (
                   <>
                     <p className={`text-sm font-medium ${card.statusColor} mb-3`}>{card.status}</p>
+                    {card.predictedDate && (
+                      <div className="mb-3 px-3 py-2 rounded-lg bg-primary/5 border border-primary/10">
+                        <div className="flex items-center gap-1.5 mb-0.5">
+                          <Calendar className="w-3.5 h-3.5 text-primary" />
+                          <span className="text-xs font-medium text-primary">Next Period</span>
+                        </div>
+                        <div className="text-sm font-semibold text-foreground">{card.predictedDate}</div>
+                        {card.daysUntil != null && card.daysUntil > 0 && (
+                          <div className="text-xs text-muted-foreground">{card.daysUntil} days away</div>
+                        )}
+                      </div>
+                    )}
                     <div className="pt-3 border-t border-border">
                       <div className="text-xl font-bold gradient-text">{card.metric}</div>
                       <div className="text-xs text-muted-foreground mt-0.5">{card.metricLabel}</div>
