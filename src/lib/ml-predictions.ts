@@ -28,9 +28,10 @@ export interface PCOSResult {
 
 // ── Menopause Types ──────────────────────────────────────────────────────────
 export interface MenopauseInputData {
-  age: number; estrogenLevel: number; fshLevel: number; yearsSinceLastPeriod: number;
+  age: number; estrogenLevel: number; fshLevel: number; amhLevel: number; yearsSinceLastPeriod: number;
   irregularPeriods: boolean; missedPeriods: boolean; hotFlashes: boolean;
   nightSweats: boolean; sleepProblems: boolean; vaginalDryness: boolean; jointPain: boolean;
+  anxietyLevel: 'none' | 'mild' | 'moderate' | 'severe';
 }
 export interface MenopauseRecommendations { diet: string[]; exercise: string[]; lifestyle: string[]; needsDoctor: boolean; }
 export interface MenopauseResult {
