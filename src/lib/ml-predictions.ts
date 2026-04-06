@@ -100,9 +100,12 @@ export function predictMenopause(data: MenopauseInputData): MenopauseResult {
   let hormoneScore   = 0;
   if (data.fshLevel >= 40) hormoneScore += 2; else if (data.fshLevel >= 25) hormoneScore += 1;
   if (data.estrogenLevel <= 30) hormoneScore += 2; else if (data.estrogenLevel <= 50) hormoneScore += 1;
-  const symptomScore = [data.irregularPeriods,data.missedPeriods,data.hotFlashes,data.nightSweats,data.sleepProblems,data.vaginalDryness,data.jointPain].filter(Boolean).length;
+  if (data.amhLevel <= 0.5) hormoneScore += 2; else if (data.amhLevel <= 1.0) hormoneScore += 1;
+  const anxietyScore = data.anxietyLevel === 'severe' ? 2 : data.anxietyLevel === 'moderate' ? 1.5 : data.anxietyLevel === 'mild' ? 0.5 : 0;
+  const symptomScore = [data.irregularPeriods,data.missedPeriods,data.hotFlashes,data.nightSweats,data.sleepProblems,data.vaginalDryness,data.jointPain].filter(Boolean).length + anxietyScore;
   const periodScore  = data.yearsSinceLastPeriod >= 2 ? 4 : data.yearsSinceLastPeriod >= 1 ? 3 : data.yearsSinceLastPeriod >= 0.5 ? 2 : data.yearsSinceLastPeriod > 0 ? 1 : 0;
-  const riskPercentage = Math.min(100, Math.max(0, Math.round(((ageScore+hormoneScore+symptomScore+periodScore)/19)*100)));
+  const maxScore = 23;
+  const riskPercentage = Math.min(100, Math.max(0, Math.round(((ageScore+hormoneScore+symptomScore+periodScore)/maxScore)*100)));
   return { stage, riskPercentage, hasMenopauseSymptoms: stage !== 'Pre-Menopause', breakdown: { ageScore, hormoneScore, symptomScore, periodScore }, recommendations: getMenopauseRecommendations(stage) };
 }
 

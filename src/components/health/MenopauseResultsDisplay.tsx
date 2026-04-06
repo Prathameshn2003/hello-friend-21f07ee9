@@ -263,6 +263,30 @@ export const MenopauseResultsDisplay = ({ result, onFindDoctors, onRestart }: Me
         )}
       </div>
 
+      {/* AMH & Anxiety Insight (shown for peri/post) */}
+      {hasMenopauseSymptoms && (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="glass-card rounded-2xl p-4 sm:p-6 space-y-3"
+        >
+          <h3 className="font-heading text-base sm:text-lg font-semibold text-foreground flex items-center gap-2">
+            💡 What Your Results Mean
+          </h3>
+          <div className="space-y-2 text-sm text-foreground">
+            <p>
+              Your hormone levels and symptoms suggest your body may be transitioning. Changes in egg reserve (AMH) and hormone balance are natural parts of this process.
+            </p>
+            <p>
+              If you're experiencing anxiety or stress, know that hormonal shifts can affect mood — this is common and manageable with the right support.
+            </p>
+            <p className="text-muted-foreground italic">
+              This combination of factors helps us give you a more complete picture of where you are in your journey.
+            </p>
+          </div>
+        </motion.div>
+      )}
+
       <HealthDisclaimer />
 
       {/* Action Buttons */}
