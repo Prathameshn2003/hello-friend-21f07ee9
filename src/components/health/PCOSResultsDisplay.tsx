@@ -29,20 +29,20 @@ export const PCOSResultsDisplay = ({ result, onFindDoctors, onRestart }: PCOSRes
   const { hasPCOS, riskPercentage, severity, breakdown, recommendations } = result;
 
   const severityConfig = {
-    none: { label: 'No PCOS Detected', color: 'text-teal', bgColor: 'bg-teal/20', description: 'Your symptoms do not indicate PCOS risk. Maintain a healthy lifestyle!' },
-    low: { label: 'Low Risk', color: 'text-teal', bgColor: 'bg-teal/20', description: 'Minor indicators present. Continue monitoring your health.' },
-    medium: { label: 'Medium Risk', color: 'text-accent', bgColor: 'bg-accent/20', description: 'Some PCOS indicators detected. Consider consulting a doctor.' },
-    high: { label: 'High Risk', color: 'text-destructive', bgColor: 'bg-destructive/20', description: 'Significant PCOS indicators. Medical consultation recommended.' },
+    none: { label: 'No PCOS Detected', color: 'text-teal', bgColor: 'bg-teal/20', description: 'Great news! Your symptoms do not indicate PCOS. Keep up your healthy habits! 💚', emoji: '✅' },
+    low: { label: 'Low Risk', color: 'text-teal', bgColor: 'bg-teal/20', description: 'Minor indicators present, but nothing to worry about. Stay mindful of your health. 💚', emoji: '🟢' },
+    medium: { label: 'Medium Risk', color: 'text-accent', bgColor: 'bg-accent/20', description: 'Some signs were found. A doctor visit could help you understand better. 🧡', emoji: '🟠' },
+    high: { label: 'High Risk', color: 'text-destructive', bgColor: 'bg-destructive/20', description: 'We found significant indicators. Please consult a gynecologist soon. ❤️', emoji: '🔴' },
   };
 
   const config = severityConfig[severity];
 
   // Score breakdown data for the new component
   const scoreBreakdownItems = [
-    { name: 'Cycle Irregularity', score: breakdown.cycleScore, maxScore: 35, description: 'Irregular periods, missed cycles, or unusual timing' },
-    { name: 'Hormonal Signs', score: breakdown.hormonalScore, maxScore: 25, description: 'Acne, excess hair growth, hair thinning' },
-    { name: 'Ovarian Status', score: breakdown.ultrasoundScore, maxScore: 25, description: 'Follicle count from ultrasound' },
-    { name: 'Metabolic Factor', score: breakdown.metabolicScore, maxScore: 15, description: 'BMI and weight distribution' },
+    { name: 'Period Regularity', score: breakdown.cycleScore, maxScore: 35, description: 'How regular your periods are — irregular or missed periods may be a sign' },
+    { name: 'Hormonal Signs', score: breakdown.hormonalScore, maxScore: 25, description: 'Signs like acne, excess facial hair, or hair thinning caused by hormones' },
+    { name: 'Ovarian Health', score: breakdown.ultrasoundScore, maxScore: 25, description: 'Ultrasound findings about your ovaries (follicle count)' },
+    { name: 'Body & Weight', score: breakdown.metabolicScore, maxScore: 15, description: 'How your body weight and BMI might be affecting your hormonal balance' },
   ];
 
   return (
@@ -57,11 +57,11 @@ export const PCOSResultsDisplay = ({ result, onFindDoctors, onRestart }: PCOSRes
         >
           <Activity className="w-8 h-8 sm:w-10 sm:h-10 text-accent" />
         </motion.div>
-        <h1 className="font-heading text-2xl sm:text-3xl md:text-4xl font-bold text-foreground mb-2">
+        <h1 className="font-heading text-xl sm:text-2xl md:text-3xl font-bold text-foreground mb-2">
           Your PCOS Assessment
         </h1>
-        <p className="text-muted-foreground text-sm sm:text-base">
-          AI-powered analysis based on your health data
+        <p className="text-muted-foreground text-xs sm:text-sm md:text-base">
+          Here's what we found based on your health information
         </p>
       </div>
 
