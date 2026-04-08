@@ -38,6 +38,7 @@ const stepLabels = ["Learn", "Assess", "Results"];
 const PCOSModule = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   const [currentStep, setCurrentStep] = useState<Step>("education");
   const [pcosResult, setPcosResult] = useState<PCOSResult | null>(null);
   const [predictionMeta, setPredictionMeta] = useState<MLPredictionMeta | null>(null);
@@ -81,6 +82,7 @@ const PCOSModule = () => {
             title: "Assessment saved", 
             description: "Your PCOS assessment results have been saved." 
           });
+          queryClient.invalidateQueries({ queryKey: ["health-assessment", "pcos"] });
         } catch (error) {
           console.error("Failed to save assessment:", error);
           toast({
