@@ -1,4 +1,5 @@
 import { useState, useRef } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
@@ -38,6 +39,7 @@ const stepLabels = ["Learn", "Assess", "Results"];
 const MenopauseModule = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   const [currentStep, setCurrentStep] = useState<Step>("education");
   const [menopauseResult, setMenopauseResult] = useState<MenopauseResult | null>(null);
   const [predictionMeta, setPredictionMeta] = useState<MLPredictionMeta | null>(null);
@@ -82,6 +84,7 @@ const MenopauseModule = () => {
             title: "Assessment saved", 
             description: "Your menopause assessment results have been saved." 
           });
+          queryClient.invalidateQueries({ queryKey: ["health-assessment", "menopause"] });
         } catch (error) {
           console.error("Failed to save assessment:", error);
           toast({

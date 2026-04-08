@@ -62,10 +62,10 @@ export const MenopauseResultsDisplay = ({ result, onFindDoctors, onRestart }: Me
 
   // Score breakdown data
   const scoreBreakdownItems = [
-    { name: 'Age Factor', score: breakdown.ageScore, maxScore: 30, description: 'Age-related risk assessment' },
-    { name: 'Hormone Changes', score: breakdown.hormoneScore, maxScore: 25, description: 'Hormonal symptom indicators' },
-    { name: 'Physical Symptoms', score: breakdown.symptomScore, maxScore: 25, description: 'Hot flashes, night sweats, etc.' },
-    { name: 'Period Status', score: breakdown.periodScore, maxScore: 20, description: 'Menstrual cycle changes' },
+    { name: 'Age Factor', score: breakdown.ageScore, maxScore: 30, description: 'Your age plays a natural role in menopause timing — this is completely normal' },
+    { name: 'Hormone Changes', score: breakdown.hormoneScore, maxScore: 25, description: 'Changes in your hormones (like estrogen & AMH) that signal transition' },
+    { name: 'Body Symptoms', score: breakdown.symptomScore, maxScore: 25, description: 'Physical signs like hot flashes, night sweats, mood changes, or anxiety' },
+    { name: 'Period Changes', score: breakdown.periodScore, maxScore: 20, description: 'How your menstrual cycle has been changing (regularity, flow, gaps)' },
   ];
 
   return (
@@ -80,11 +80,11 @@ export const MenopauseResultsDisplay = ({ result, onFindDoctors, onRestart }: Me
         >
           <Thermometer className="w-8 h-8 sm:w-10 sm:h-10 text-teal" />
         </motion.div>
-        <h1 className="font-heading text-2xl sm:text-3xl md:text-4xl font-bold text-foreground mb-2">
+        <h1 className="font-heading text-xl sm:text-2xl md:text-3xl font-bold text-foreground mb-2">
           Your Menopause Assessment
         </h1>
-        <p className="text-muted-foreground text-sm sm:text-base">
-          AI-powered analysis based on your health data
+        <p className="text-muted-foreground text-xs sm:text-sm md:text-base">
+          Here's what we found about your menopause journey
         </p>
       </div>
 

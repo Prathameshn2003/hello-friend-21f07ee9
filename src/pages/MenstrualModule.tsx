@@ -1,4 +1,5 @@
 import { useState, useCallback } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { Card, CardContent } from "@/components/ui/card";
@@ -55,6 +56,7 @@ const REMINDER_OPTIONS = [
 // ─────────────────────────────────────────────────────────────────────────────
 const MenstrualModule = () => {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
 
   // ── Core state ──────────────────────────────────────────────────────────────
   const [tab, setTab]         = useState<TabId>("assess");
@@ -182,6 +184,7 @@ const MenstrualModule = () => {
             predicted_cycle: prediction.predicted_cycle,
           })),
         }]);
+        queryClient.invalidateQueries({ queryKey: ["health-assessment", "menstrual"] });
       } catch (err) {
         console.error("Supabase save error:", err);
       }

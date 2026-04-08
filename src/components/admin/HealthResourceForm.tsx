@@ -20,7 +20,7 @@ export const HealthResourceForm = ({ resource, onSuccess, onCancel }: HealthReso
   const [form, setForm] = useState({
     title: resource?.title || "",
     description: resource?.description || "",
-    category: resource?.category || "General",
+    category: resource?.category || "General Wellness",
     external_link: resource?.external_link || "",
     status: resource?.status || "Draft",
     is_active: resource?.is_active ?? true,
@@ -74,7 +74,7 @@ export const HealthResourceForm = ({ resource, onSuccess, onCancel }: HealthReso
           <Select value={form.category} onValueChange={v => setForm(f => ({ ...f, category: v }))}>
             <SelectTrigger><SelectValue /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="General">General</SelectItem>
+              <SelectItem value="General Wellness">General Wellness</SelectItem>
               <SelectItem value="Menstrual">Menstrual</SelectItem>
               <SelectItem value="PCOS">PCOS</SelectItem>
               <SelectItem value="Menopause">Menopause</SelectItem>

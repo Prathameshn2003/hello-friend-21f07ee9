@@ -2,7 +2,7 @@ import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { 
   Activity, Droplets, ChevronRight, Thermometer,
   Stethoscope, FileText, BookOpen, Calendar,
-  Heart, Sun, Moon, Sparkles
+  Heart, Sun, Moon, Sparkles, Clock
 } from "lucide-react";
 import logoImg from "@/assets/logo.png";
 import { Link } from "react-router-dom";
@@ -83,6 +83,35 @@ const Dashboard = () => {
     };
   }, [cycleLogs, insights]);
 
+  // Get predicted date from multiple sources
+  const menstrualPredictedDate = useMemo(() => {
+    // Source 1: cycle_predictions table
+    if (prediction?.predicted_start_date) {
+      return {
+        date: format(parseISO(prediction.predicted_start_date), "dd MMM yyyy"),
+        daysUntil: prediction.days_until,
+      };
+    }
+    // Source 2: menstrual assessment recommendations (saved next_date)
+    if (menstrualAssessment?.recommendations) {
+      const recs = menstrualAssessment.recommendations as Record<string, unknown>;
+      const nextDate = recs.next_date as string | undefined;
+      if (nextDate) {
+        try {
+          const parsed = new Date(nextDate);
+          if (!isNaN(parsed.getTime())) {
+            const daysUntil = differenceInDays(parsed, new Date());
+            return {
+              date: format(parsed, "dd MMM yyyy"),
+              daysUntil: daysUntil > 0 ? daysUntil : 0,
+            };
+          }
+        } catch {}
+      }
+    }
+    return null;
+  }, [prediction, menstrualAssessment]);
+
   // Build health cards from real data
   const healthCards = useMemo(() => {
     const pcosRiskLabel = pcosAssessment ? getRiskLabel(pcosAssessment.risk_category) : null;
@@ -94,15 +123,6 @@ const Dashboard = () => {
     const menstrualStatus = menstrualAssessment
       ? (menstrualAssessment.risk_category === "low" ? "Regular" : "Irregular")
       : (cycleData.currentDay ? `Day ${cycleData.currentDay} of Cycle` : null);
-    const menstrualMetric = menstrualAssessment
-      ? `${menstrualAssessment.risk_score != null ? Math.round(menstrualAssessment.risk_score) : 0}%`
-      : (cycleLogs.length > 0 ? `${insights.averageCycleLength} days` : null);
-    const menstrualMetricLabel = menstrualAssessment ? "Risk Score" : "Average Cycle";
-
-    const predictedDate = prediction?.predicted_start_date 
-      ? format(parseISO(prediction.predicted_start_date), "dd MMM yyyy")
-      : null;
-    const daysUntil = prediction?.days_until;
 
     return [
       {
@@ -115,11 +135,11 @@ const Dashboard = () => {
         iconBg: "bg-teal/15",
         iconColor: "text-teal",
         path: "/modules/menstrual",
-        metric: menstrualMetric,
-        metricLabel: menstrualMetricLabel,
         hasData: !!menstrualAssessment || cycleLogs.length > 0,
-        predictedDate,
-        daysUntil,
+        predictedDate: menstrualPredictedDate?.date || null,
+        daysUntil: menstrualPredictedDate?.daysUntil ?? null,
+        metric: null as string | null,
+        metricLabel: null as string | null,
       },
       {
         title: "PCOS Risk",
@@ -132,6 +152,8 @@ const Dashboard = () => {
         metric: pcosScore != null ? `${pcosScore}%` : null,
         metricLabel: "Health Score",
         hasData: !!pcosAssessment,
+        predictedDate: null as string | null,
+        daysUntil: null as number | null,
       },
       {
         title: "Menopause Stage",
@@ -144,9 +166,11 @@ const Dashboard = () => {
         metric: menopauseAssessment?.risk_score != null ? `${Math.round(menopauseAssessment.risk_score)}%` : null,
         metricLabel: "Risk Score",
         hasData: !!menopauseAssessment,
+        predictedDate: null as string | null,
+        daysUntil: null as number | null,
       },
     ];
-  }, [cycleData, cycleLogs, insights, pcosAssessment, menopauseAssessment, menstrualAssessment, prediction]);
+  }, [cycleData, cycleLogs, insights, pcosAssessment, menopauseAssessment, menstrualAssessment, menstrualPredictedDate]);
 
   if (loading) {
     return (
@@ -168,40 +192,40 @@ const Dashboard = () => {
     <DashboardLayout>
       <div className="space-y-6 md:space-y-8 animate-fade-up">
         {/* Welcome Hero Section */}
-        <div className="relative overflow-hidden glass-card rounded-2xl p-6 md:p-8 bg-gradient-to-br from-primary/10 via-secondary/10 to-teal/10">
+        <div className="relative overflow-hidden glass-card rounded-2xl p-5 sm:p-6 md:p-8 bg-gradient-to-br from-primary/10 via-secondary/10 to-teal/10">
           <div className="absolute top-0 right-0 w-32 h-32 md:w-48 md:h-48 bg-primary/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
           <div className="absolute bottom-0 left-0 w-24 h-24 md:w-32 md:h-32 bg-teal/20 rounded-full blur-2xl translate-y-1/2 -translate-x-1/2" />
           
           <div className="relative z-10">
-            <div className="flex items-center gap-2.5 mb-4">
-              <img src={logoImg} alt="NaariCare Logo" className="w-12 h-12 rounded-xl shadow-lg object-contain" />
-              <span className="font-heading font-bold text-xl text-foreground">
+            <div className="flex items-center gap-2.5 mb-3 sm:mb-4">
+              <img src={logoImg} alt="NaariCare Logo" className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl shadow-lg object-contain" />
+              <span className="font-heading font-bold text-lg sm:text-xl text-foreground">
                 Naari<span className="text-accent">Care</span>
               </span>
             </div>
             
-            <div className="flex items-center gap-2 text-muted-foreground mb-2">
+            <div className="flex items-center gap-2 text-muted-foreground mb-1.5 sm:mb-2">
               <greeting.icon className="w-4 h-4" />
-              <span className="text-sm">{greeting.text}</span>
+              <span className="text-xs sm:text-sm">{greeting.text}</span>
             </div>
-            <h1 className="font-heading text-2xl sm:text-3xl md:text-4xl font-bold text-foreground mb-3">
+            <h1 className="font-heading text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-foreground mb-2 sm:mb-3">
               Welcome back, {userName}! 👋
             </h1>
-            <p className="text-muted-foreground text-sm sm:text-base max-w-lg">
+            <p className="text-muted-foreground text-xs sm:text-sm md:text-base max-w-lg">
               Here's your personalized health summary. Track your cycle, monitor your health, and access resources all in one place.
             </p>
             
-            <div className="flex flex-wrap gap-4 mt-6">
-              <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-background/60 backdrop-blur-sm border border-border/50">
-                <Calendar className="w-4 h-4 text-primary" />
-                <span className="text-sm font-medium">
+            <div className="flex flex-wrap gap-2 sm:gap-4 mt-4 sm:mt-6">
+              <div className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-background/60 backdrop-blur-sm border border-border/50">
+                <Calendar className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary" />
+                <span className="text-xs sm:text-sm font-medium">
                   {cycleLogs.length} {cycleLogs.length === 1 ? 'Cycle' : 'Cycles'} Logged
                 </span>
               </div>
               {cycleData.currentDay && (
-                <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-background/60 backdrop-blur-sm border border-border/50">
-                  <Heart className="w-4 h-4 text-accent" />
-                  <span className="text-sm font-medium">Day {cycleData.currentDay}</span>
+                <div className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-background/60 backdrop-blur-sm border border-border/50">
+                  <Heart className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-accent" />
+                  <span className="text-xs sm:text-sm font-medium">Day {cycleData.currentDay}</span>
                 </div>
               )}
             </div>
@@ -210,49 +234,52 @@ const Dashboard = () => {
 
         {/* Health Modules */}
         <div className="animate-fade-up" style={{ animationDelay: '100ms' }}>
-          <h2 className="font-heading text-lg sm:text-xl font-semibold text-foreground mb-4">Health Modules</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <h2 className="font-heading text-base sm:text-lg md:text-xl font-semibold text-foreground mb-3 sm:mb-4">Health Modules</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
             {healthCards.map((card, index) => (
               <Link 
                 key={card.title} 
                 to={card.path} 
-                className="glass-card card-hover rounded-xl p-5 group animate-fade-up"
+                className="glass-card card-hover rounded-xl p-4 sm:p-5 group animate-fade-up"
                 style={{ animationDelay: `${(index + 1) * 75}ms` }}
               >
-                <div className="flex items-start justify-between mb-4">
-                  <div className={`w-12 h-12 rounded-xl ${card.iconBg} flex items-center justify-center transition-all duration-300 group-hover:scale-110 group-hover:shadow-lg`}>
-                    <card.icon className={`w-6 h-6 ${card.iconColor}`} />
+                <div className="flex items-start justify-between mb-3 sm:mb-4">
+                  <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl ${card.iconBg} flex items-center justify-center transition-all duration-300 group-hover:scale-110 group-hover:shadow-lg`}>
+                    <card.icon className={`w-5 h-5 sm:w-6 sm:h-6 ${card.iconColor}`} />
                   </div>
-                  <ChevronRight className="w-5 h-5 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all duration-300" />
+                  <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all duration-300" />
                 </div>
-                <h3 className="font-heading text-base font-semibold text-foreground mb-1">{card.title}</h3>
+                <h3 className="font-heading text-sm sm:text-base font-semibold text-foreground mb-1">{card.title}</h3>
                 
                 {card.hasData ? (
                   <>
-                    <p className={`text-sm font-medium ${card.statusColor} mb-3`}>{card.status}</p>
+                    <p className={`text-xs sm:text-sm font-medium ${card.statusColor} mb-2 sm:mb-3`}>{card.status}</p>
                     {card.predictedDate ? (
-                      <div className="pt-3 border-t border-border px-3 py-2 rounded-lg bg-primary/5 border-primary/10">
+                      <div className="pt-2 sm:pt-3 border-t border-border px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg bg-primary/5 border-primary/10">
                         <div className="flex items-center gap-1.5 mb-0.5">
-                          <Calendar className="w-3.5 h-3.5 text-primary" />
-                          <span className="text-xs font-medium text-primary">Next Period</span>
+                          <Calendar className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-primary" />
+                          <span className="text-[10px] sm:text-xs font-medium text-primary">Next Period</span>
                         </div>
-                        <div className="text-sm font-semibold text-foreground">{card.predictedDate}</div>
+                        <div className="text-xs sm:text-sm font-semibold text-foreground">{card.predictedDate}</div>
                         {card.daysUntil != null && card.daysUntil > 0 && (
-                          <div className="text-xs text-muted-foreground">{card.daysUntil} days away</div>
+                          <div className="flex items-center gap-1 mt-0.5">
+                            <Clock className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-muted-foreground" />
+                            <span className="text-[10px] sm:text-xs text-muted-foreground">{card.daysUntil} days away</span>
+                          </div>
                         )}
                       </div>
-                    ) : !card.predictedDate && card.metric ? (
-                      <div className="pt-3 border-t border-border">
-                        <div className="text-xl font-bold gradient-text">{card.metric}</div>
-                        <div className="text-xs text-muted-foreground mt-0.5">{card.metricLabel}</div>
+                    ) : card.metric ? (
+                      <div className="pt-2 sm:pt-3 border-t border-border">
+                        <div className="text-lg sm:text-xl font-bold gradient-text">{card.metric}</div>
+                        <div className="text-[10px] sm:text-xs text-muted-foreground mt-0.5">{card.metricLabel}</div>
                       </div>
                     ) : null}
                   </>
                 ) : (
-                  <div className="mt-2">
-                    <p className="text-sm text-muted-foreground mb-3">No assessment yet</p>
-                    <div className="pt-3 border-t border-border flex items-center gap-2 text-primary text-sm font-medium">
-                      <Sparkles className="w-4 h-4" />
+                  <div className="mt-1.5 sm:mt-2">
+                    <p className="text-xs sm:text-sm text-muted-foreground mb-2 sm:mb-3">No assessment yet</p>
+                    <div className="pt-2 sm:pt-3 border-t border-border flex items-center gap-2 text-primary text-xs sm:text-sm font-medium">
+                      <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                       Start Assessment
                     </div>
                   </div>
@@ -264,20 +291,20 @@ const Dashboard = () => {
 
         {/* Quick Resources Grid */}
         <div className="animate-fade-up" style={{ animationDelay: '400ms' }}>
-          <h2 className="font-heading text-lg sm:text-xl font-semibold text-foreground mb-4">Quick Access</h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+          <h2 className="font-heading text-base sm:text-lg md:text-xl font-semibold text-foreground mb-3 sm:mb-4">Quick Access</h2>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3 md:gap-4">
             {dashboardSections.map((section, index) => (
               <Link 
                 key={section.title} 
                 to={section.path} 
-                className="glass-card card-hover rounded-xl p-4 sm:p-5 group text-center"
+                className="glass-card card-hover rounded-xl p-3 sm:p-4 md:p-5 group text-center"
                 style={{ animationDelay: `${(index + 5) * 50}ms` }}
               >
-                <div className={`w-12 h-12 rounded-xl ${section.bgColor} flex items-center justify-center mx-auto mb-3 transition-all duration-300 group-hover:scale-110 group-hover:shadow-md`}>
-                  <section.icon className={`w-6 h-6 ${section.color}`} />
+                <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl ${section.bgColor} flex items-center justify-center mx-auto mb-2 sm:mb-3 transition-all duration-300 group-hover:scale-110 group-hover:shadow-md`}>
+                  <section.icon className={`w-5 h-5 sm:w-6 sm:h-6 ${section.color}`} />
                 </div>
-                <h3 className="font-medium text-foreground text-sm mb-1">{section.title}</h3>
-                <p className="text-xs text-muted-foreground hidden sm:block">{section.description}</p>
+                <h3 className="font-medium text-foreground text-xs sm:text-sm mb-0.5 sm:mb-1">{section.title}</h3>
+                <p className="text-[10px] sm:text-xs text-muted-foreground hidden sm:block">{section.description}</p>
               </Link>
             ))}
           </div>

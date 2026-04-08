@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
@@ -37,6 +38,7 @@ const stepLabels = ["Learn", "Assess", "Results"];
 const PCOSModule = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   const [currentStep, setCurrentStep] = useState<Step>("education");
   const [pcosResult, setPcosResult] = useState<PCOSResult | null>(null);
   const [predictionMeta, setPredictionMeta] = useState<MLPredictionMeta | null>(null);
@@ -80,6 +82,7 @@ const PCOSModule = () => {
             title: "Assessment saved", 
             description: "Your PCOS assessment results have been saved." 
           });
+          queryClient.invalidateQueries({ queryKey: ["health-assessment", "pcos"] });
         } catch (error) {
           console.error("Failed to save assessment:", error);
           toast({
