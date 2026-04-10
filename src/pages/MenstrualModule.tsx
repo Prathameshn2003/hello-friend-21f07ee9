@@ -101,19 +101,31 @@ const MenstrualModule = () => {
   const handleScheduleReminders = async () => {
     if (!predictedStartDate || !os.isSubscribed) return;
     setScheduling(true);
-    const reminders = os.buildPeriodReminders(predictedStartDate, selectedDays);
-    if (includeOvulation) {
-      const ov = os.buildOvulationReminder(predictedStartDate, avgCycle);
-      if (ov) reminders.push(ov);
+    try {
+      const reminders = os.buildPeriodReminders(predictedStartDate, selectedDays);
+      if (includeOvulation) {
+        const ov = os.buildOvulationReminder(predictedStartDate, avgCycle);
+        if (ov) reminders.push(ov);
+      }
+      const count = await os.scheduleReminders(reminders);
+      if (count > 0) {
+        setScheduled(true);
+      } else {
+        toast({ title: "⚠️ Scheduling failed", description: "Could not reach the notification service. Please try again later.", variant: "destructive" });
+      }
+    } catch {
+      toast({ title: "Error", description: "Failed to schedule reminders. Check your connection.", variant: "destructive" });
     }
-    await os.scheduleReminders(reminders);
     setScheduling(false);
-    setScheduled(true);
   };
 
   const handleTestNotification = async () => {
     const ok = await os.sendTestNotification();
-    if (ok) setTestSent(true);
+    if (ok) {
+      setTestSent(true);
+    } else {
+      toast({ title: "Test failed", description: "Notification service didn't respond. Check OneSignal config or try again.", variant: "destructive" });
+    }
   };
 
   // ── Submit handler ──────────────────────────────────────────────────────────
