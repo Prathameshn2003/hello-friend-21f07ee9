@@ -24,6 +24,7 @@ import { PhaseRing } from "@/components/menstrual/PhaseRing";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
+import { toast } from "@/hooks/use-toast";
 import { useOneSignalNotifications } from "@/hooks/useOneSignalNotifications";
 
 // ─────────────────────────────────────────────────────────────────────────────
