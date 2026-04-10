@@ -215,7 +215,7 @@ const MenopauseModule = () => {
               </div>
 
               {/* Quick Stats */}
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-3 gap-2 sm:gap-4">
                 {[
                   { value: "45-55", label: "Typical Age Range", delay: 0.1 },
                   { value: "51", label: "Average Age", delay: 0.2 },
@@ -226,10 +226,10 @@ const MenopauseModule = () => {
                     initial={{ y: 20, opacity: 0 }}
                     animate={{ y: 0, opacity: 1 }}
                     transition={{ delay }}
-                    className="glass-card rounded-xl p-4 text-center"
+                    className="glass-card rounded-xl p-3 sm:p-4 text-center"
                   >
-                    <div className="text-3xl font-bold text-teal">{value}</div>
-                    <div className="text-xs text-muted-foreground">{label}</div>
+                    <div className="text-xl sm:text-3xl font-bold text-teal">{value}</div>
+                    <div className="text-[10px] sm:text-xs text-muted-foreground">{label}</div>
                   </motion.div>
                 ))}
               </div>
@@ -394,11 +394,11 @@ const MenopauseModule = () => {
 
               <HealthDisclaimer />
 
-              <div className="text-center">
-                <Button size="lg" onClick={scrollToAssessment} className="group text-lg px-8 bg-teal hover:bg-teal/90">
-                  <Heart className="w-5 h-5 mr-2" />
+              <div className="text-center px-2">
+                <Button size="lg" onClick={scrollToAssessment} className="group text-sm sm:text-lg px-5 sm:px-8 w-full sm:w-auto bg-teal hover:bg-teal/90">
+                  <Heart className="w-4 h-4 sm:w-5 sm:h-5 mr-1.5 sm:mr-2" />
                   Start Menopause Assessment
-                  <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
+                  <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 ml-1.5 sm:ml-2 group-hover:translate-x-1 transition-transform" />
                 </Button>
               </div>
             </motion.div>

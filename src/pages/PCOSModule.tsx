@@ -199,7 +199,7 @@ const PCOSModule = () => {
                 <p className="text-sm text-muted-foreground mb-4">
                   NaariCare's machine learning model analyzes your data against medically validated patterns to estimate PCOS risk:
                 </p>
-                <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2 sm:gap-3">
                   {[
                     { icon: "🩸", label: "Menstrual cycle info" },
                     { icon: "⚖️", label: "Body measurements" },
@@ -318,7 +318,7 @@ const PCOSModule = () => {
                   PCOS diagnosis is based on clinical symptoms, ultrasound findings, and hormonal imbalance. 
                   NaariCare follows the same clinical logic to provide a data-driven risk evaluation.
                 </p>
-                <div className="grid grid-cols-3 gap-3">
+                <div className="grid grid-cols-3 gap-2 sm:gap-3">
                   {[
                     { label: "Higher accuracy", icon: "🎯" },
                     { label: "Reliable estimation", icon: "📊" },
@@ -334,11 +334,11 @@ const PCOSModule = () => {
 
               <HealthDisclaimer />
 
-              <div className="text-center">
-                <Button size="lg" onClick={() => setCurrentStep("assessment")} className="group text-lg px-8">
-                  <Sparkles className="w-5 h-5 mr-2" />
+              <div className="text-center px-2">
+                <Button size="lg" onClick={() => setCurrentStep("assessment")} className="group text-sm sm:text-lg px-5 sm:px-8 w-full sm:w-auto">
+                  <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 mr-1.5 sm:mr-2" />
                   Start Clinical Assessment
-                  <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
+                  <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 ml-1.5 sm:ml-2 group-hover:translate-x-1 transition-transform" />
                 </Button>
               </div>
             </motion.div>
