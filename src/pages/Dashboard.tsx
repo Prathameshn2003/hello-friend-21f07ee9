@@ -9,6 +9,8 @@ import { Link } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useCycleTracking } from "@/hooks/useCycleTracking";
 import { useHealthAssessments } from "@/hooks/useHealthAssessments";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { differenceInDays, parseISO, format } from "date-fns";
 import { useMemo } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -49,6 +51,24 @@ const Dashboard = () => {
   const { user } = useAuth();
   const { cycleLogs, loading: cycleLoading, insights, prediction } = useCycleTracking();
   const { pcosAssessment, menopauseAssessment, menstrualAssessment, loading: assessmentLoading } = useHealthAssessments();
+  
+  // Also fetch the latest active cycle_prediction directly for faster updates
+  const { data: latestPrediction } = useQuery({
+    queryKey: ["cycle-predictions", user?.id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("cycle_predictions")
+        .select("*")
+        .eq("user_id", user!.id)
+        .eq("is_active", true)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      return data;
+    },
+    enabled: !!user,
+  });
+
   const userName = user?.user_metadata?.full_name?.split(' ')[0] || 'there';
   const loading = cycleLoading || assessmentLoading;
 
@@ -85,14 +105,23 @@ const Dashboard = () => {
 
   // Get predicted date from multiple sources
   const menstrualPredictedDate = useMemo(() => {
-    // Source 1: cycle_predictions table
+    // Source 1: Direct cycle_predictions table (fastest after assessment)
+    if (latestPrediction?.predicted_start_date) {
+      const parsed = parseISO(latestPrediction.predicted_start_date);
+      const daysUntil = differenceInDays(parsed, new Date());
+      return {
+        date: format(parsed, "dd MMM yyyy"),
+        daysUntil: daysUntil > 0 ? daysUntil : 0,
+      };
+    }
+    // Source 2: cycle tracking hook prediction
     if (prediction?.predicted_start_date) {
       return {
         date: format(parseISO(prediction.predicted_start_date), "dd MMM yyyy"),
         daysUntil: prediction.days_until,
       };
     }
-    // Source 2: menstrual assessment recommendations (saved next_date)
+    // Source 3: menstrual assessment recommendations
     if (menstrualAssessment?.recommendations) {
       const recs = menstrualAssessment.recommendations as Record<string, unknown>;
       const nextDate = recs.next_date as string | undefined;
@@ -110,7 +139,7 @@ const Dashboard = () => {
       }
     }
     return null;
-  }, [prediction, menstrualAssessment]);
+  }, [latestPrediction, prediction, menstrualAssessment]);
 
   // Build health cards from real data
   const healthCards = useMemo(() => {
