@@ -199,7 +199,7 @@ const PCOSModule = () => {
                 <p className="text-sm text-muted-foreground mb-4">
                   NaariCare's machine learning model analyzes your data against medically validated patterns to estimate PCOS risk:
                 </p>
-                <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2 sm:gap-3">
                   {[
                     { icon: "🩸", label: "Menstrual cycle info" },
                     { icon: "⚖️", label: "Body measurements" },
@@ -318,7 +318,7 @@ const PCOSModule = () => {
                   PCOS diagnosis is based on clinical symptoms, ultrasound findings, and hormonal imbalance. 
                   NaariCare follows the same clinical logic to provide a data-driven risk evaluation.
                 </p>
-                <div className="grid grid-cols-3 gap-3">
+                <div className="grid grid-cols-3 gap-2 sm:gap-3">
                   {[
                     { label: "Higher accuracy", icon: "🎯" },
                     { label: "Reliable estimation", icon: "📊" },
