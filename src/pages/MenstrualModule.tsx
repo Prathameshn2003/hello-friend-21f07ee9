@@ -170,6 +170,7 @@ const MenstrualModule = () => {
 
     if (user && prediction) {
       try {
+        // Save assessment
         await supabase.from("health_assessments").insert([{
           user_id:         user.id,
           assessment_type: used ? "menstrual_ml_api" : "menstrual_ml_local",
@@ -184,7 +185,28 @@ const MenstrualModule = () => {
             predicted_cycle: prediction.predicted_cycle,
           })),
         }]);
+
+        // Save cycle prediction for dashboard
+        if (prediction.next_date_obj) {
+          // Deactivate old predictions
+          await supabase.from("cycle_predictions")
+            .update({ is_active: false })
+            .eq("user_id", user.id)
+            .eq("is_active", true);
+
+          await supabase.from("cycle_predictions").insert({
+            user_id: user.id,
+            predicted_start_date: prediction.next_date_obj.toISOString().split("T")[0],
+            predicted_end_date: new Date(prediction.next_date_obj.getTime() + (form.period_duration * 86400000)).toISOString().split("T")[0],
+            prediction_method: used ? "ml_api" : "local_logic",
+            cycle_length_used: prediction.predicted_cycle,
+            confidence_level: used ? "high" : "medium",
+            is_active: true,
+          });
+        }
+
         queryClient.invalidateQueries({ queryKey: ["health-assessment", "menstrual"] });
+        queryClient.invalidateQueries({ queryKey: ["cycle-predictions"] });
       } catch (err) {
         console.error("Supabase save error:", err);
       }
