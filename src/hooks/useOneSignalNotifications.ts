@@ -84,14 +84,26 @@ async function sendOneSignalNotification(
   }
 
   try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 8000);
     const res = await fetch(OS_API_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
+      signal: controller.signal,
     });
+    clearTimeout(timeoutId);
+    if (!res.ok) {
+      const errText = await res.text().catch(() => "Unknown error");
+      console.warn("[OneSignal] API returned", res.status, errText);
+    }
     return res.ok;
   } catch (err) {
-    console.error("[OneSignal] Failed to send notification:", err);
+    if (err instanceof DOMException && err.name === "AbortError") {
+      console.warn("[OneSignal] Request timed out");
+    } else {
+      console.error("[OneSignal] Failed to send notification:", err);
+    }
     return false;
   }
 }

@@ -209,7 +209,7 @@ const MenstrualModule = () => {
     <div className="min-h-screen bg-background">
       <Header />
       <main className="pt-20 sm:pt-24 pb-20">
-        <div className="container mx-auto px-4 max-w-xl">
+        <div className="container mx-auto px-3 sm:px-4 max-w-xl">
 
           {/* Page header */}
           <div className="text-center mb-5 relative">
