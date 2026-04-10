@@ -334,11 +334,11 @@ const PCOSModule = () => {
 
               <HealthDisclaimer />
 
-              <div className="text-center">
-                <Button size="lg" onClick={() => setCurrentStep("assessment")} className="group text-lg px-8">
-                  <Sparkles className="w-5 h-5 mr-2" />
+              <div className="text-center px-2">
+                <Button size="lg" onClick={() => setCurrentStep("assessment")} className="group text-sm sm:text-lg px-5 sm:px-8 w-full sm:w-auto">
+                  <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 mr-1.5 sm:mr-2" />
                   Start Clinical Assessment
-                  <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
+                  <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 ml-1.5 sm:ml-2 group-hover:translate-x-1 transition-transform" />
                 </Button>
               </div>
             </motion.div>

@@ -27,10 +27,10 @@ const footerLinks = {
 export const Footer = forwardRef<HTMLElement>((props, ref) => {
   return (
     <footer ref={ref} className="bg-muted/50 border-t border-border">
-      <div className="container mx-auto px-4 py-12 md:py-16">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8 lg:gap-12">
+      <div className="container mx-auto px-4 py-8 sm:py-12 md:py-16">
+        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-5 gap-6 sm:gap-8 lg:gap-12">
           {/* Brand */}
-          <div className="lg:col-span-2">
+          <div className="col-span-2 sm:col-span-2 lg:col-span-2">
             <Link to="/" className="flex items-center gap-2 mb-4">
               <img src={logoImg} alt="NaariCare Logo" className="w-10 h-10 rounded-xl object-contain" />
               <span className="font-heading font-bold text-xl text-foreground">
@@ -106,7 +106,7 @@ export const Footer = forwardRef<HTMLElement>((props, ref) => {
         </div>
 
         {/* Bottom Bar */}
-        <div className="mt-12 pt-8 border-t border-border flex flex-col md:flex-row items-center justify-between gap-4">
+        <div className="mt-8 sm:mt-12 pt-6 sm:pt-8 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4">
           <p className="text-sm text-muted-foreground">
             © 2024 NaariCare. All rights reserved.
           </p>
