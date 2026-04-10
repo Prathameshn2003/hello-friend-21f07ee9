@@ -134,8 +134,8 @@ export const AdminSchemes = () => {
           <p className="text-muted-foreground">No schemes added yet.</p>
         </div>
       ) : (
-        <div className="glass-card rounded-xl overflow-hidden">
-          <Table>
+        <div className="glass-card rounded-xl overflow-x-auto">
+          <Table className="min-w-[500px]">
             <TableHeader>
               <TableRow>
                 <TableHead>Name</TableHead>

@@ -78,7 +78,6 @@ export const HealthResourceForm = ({ resource, onSuccess, onCancel }: HealthReso
               <SelectItem value="Menstrual">Menstrual</SelectItem>
               <SelectItem value="PCOS">PCOS</SelectItem>
               <SelectItem value="Menopause">Menopause</SelectItem>
-              <SelectItem value="General Wellness">General Wellness</SelectItem>
             </SelectContent>
           </Select>
         </div>

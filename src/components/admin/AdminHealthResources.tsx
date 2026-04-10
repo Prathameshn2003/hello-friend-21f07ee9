@@ -188,8 +188,8 @@ export const AdminHealthResources = () => {
           </p>
         </div>
       ) : (
-        <div className="glass-card rounded-xl overflow-hidden">
-          <Table>
+        <div className="glass-card rounded-xl overflow-x-auto">
+          <Table className="min-w-[600px]">
             <TableHeader>
               <TableRow>
                 <TableHead>Title</TableHead>

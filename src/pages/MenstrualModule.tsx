@@ -24,6 +24,7 @@ import { PhaseRing } from "@/components/menstrual/PhaseRing";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
+import { toast } from "@/hooks/use-toast";
 import { useOneSignalNotifications } from "@/hooks/useOneSignalNotifications";
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -101,19 +102,31 @@ const MenstrualModule = () => {
   const handleScheduleReminders = async () => {
     if (!predictedStartDate || !os.isSubscribed) return;
     setScheduling(true);
-    const reminders = os.buildPeriodReminders(predictedStartDate, selectedDays);
-    if (includeOvulation) {
-      const ov = os.buildOvulationReminder(predictedStartDate, avgCycle);
-      if (ov) reminders.push(ov);
+    try {
+      const reminders = os.buildPeriodReminders(predictedStartDate, selectedDays);
+      if (includeOvulation) {
+        const ov = os.buildOvulationReminder(predictedStartDate, avgCycle);
+        if (ov) reminders.push(ov);
+      }
+      const count = await os.scheduleReminders(reminders);
+      if (count > 0) {
+        setScheduled(true);
+      } else {
+        toast({ title: "⚠️ Scheduling failed", description: "Could not reach the notification service. Please try again later.", variant: "destructive" });
+      }
+    } catch {
+      toast({ title: "Error", description: "Failed to schedule reminders. Check your connection.", variant: "destructive" });
     }
-    await os.scheduleReminders(reminders);
     setScheduling(false);
-    setScheduled(true);
   };
 
   const handleTestNotification = async () => {
     const ok = await os.sendTestNotification();
-    if (ok) setTestSent(true);
+    if (ok) {
+      setTestSent(true);
+    } else {
+      toast({ title: "Test failed", description: "Notification service didn't respond. Check OneSignal config or try again.", variant: "destructive" });
+    }
   };
 
   // ── Submit handler ──────────────────────────────────────────────────────────
@@ -170,6 +183,7 @@ const MenstrualModule = () => {
 
     if (user && prediction) {
       try {
+        // Save assessment
         await supabase.from("health_assessments").insert([{
           user_id:         user.id,
           assessment_type: used ? "menstrual_ml_api" : "menstrual_ml_local",
@@ -184,7 +198,28 @@ const MenstrualModule = () => {
             predicted_cycle: prediction.predicted_cycle,
           })),
         }]);
+
+        // Save cycle prediction for dashboard
+        if (prediction.next_date_obj) {
+          // Deactivate old predictions
+          await supabase.from("cycle_predictions")
+            .update({ is_active: false })
+            .eq("user_id", user.id)
+            .eq("is_active", true);
+
+          await supabase.from("cycle_predictions").insert({
+            user_id: user.id,
+            predicted_start_date: prediction.next_date_obj.toISOString().split("T")[0],
+            predicted_end_date: new Date(prediction.next_date_obj.getTime() + (form.period_duration * 86400000)).toISOString().split("T")[0],
+            prediction_method: used ? "ml_api" : "local_logic",
+            cycle_length_used: prediction.predicted_cycle,
+            confidence_level: used ? "high" : "medium",
+            is_active: true,
+          });
+        }
+
         queryClient.invalidateQueries({ queryKey: ["health-assessment", "menstrual"] });
+        queryClient.invalidateQueries({ queryKey: ["cycle-predictions"] });
       } catch (err) {
         console.error("Supabase save error:", err);
       }
@@ -209,7 +244,7 @@ const MenstrualModule = () => {
     <div className="min-h-screen bg-background">
       <Header />
       <main className="pt-20 sm:pt-24 pb-20">
-        <div className="container mx-auto px-4 max-w-xl">
+        <div className="container mx-auto px-3 sm:px-4 max-w-xl">
 
           {/* Page header */}
           <div className="text-center mb-5 relative">
