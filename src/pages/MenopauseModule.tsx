@@ -215,7 +215,7 @@ const MenopauseModule = () => {
               </div>
 
               {/* Quick Stats */}
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-3 gap-2 sm:gap-4">
                 {[
                   { value: "45-55", label: "Typical Age Range", delay: 0.1 },
                   { value: "51", label: "Average Age", delay: 0.2 },
@@ -226,10 +226,10 @@ const MenopauseModule = () => {
                     initial={{ y: 20, opacity: 0 }}
                     animate={{ y: 0, opacity: 1 }}
                     transition={{ delay }}
-                    className="glass-card rounded-xl p-4 text-center"
+                    className="glass-card rounded-xl p-3 sm:p-4 text-center"
                   >
-                    <div className="text-3xl font-bold text-teal">{value}</div>
-                    <div className="text-xs text-muted-foreground">{label}</div>
+                    <div className="text-xl sm:text-3xl font-bold text-teal">{value}</div>
+                    <div className="text-[10px] sm:text-xs text-muted-foreground">{label}</div>
                   </motion.div>
                 ))}
               </div>
