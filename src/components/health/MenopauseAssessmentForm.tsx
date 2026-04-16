@@ -381,7 +381,7 @@ export const MenopauseAssessmentForm = ({ onSubmit }: MenopauseAssessmentFormPro
         )}
 
         {/* Navigation Buttons */}
-        <div className="flex justify-between mt-8 pt-6 border-t border-border">
+        <div className="flex justify-between mt-8 pt-6 pb-4 border-t border-border">
           <Button
             variant="ghost"
             onClick={prevStep}
