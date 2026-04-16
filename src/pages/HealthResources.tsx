@@ -85,7 +85,7 @@ const HealthResources = () => {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      <main className="pt-20 sm:pt-24 pb-16">
+      <main className="pt-20 sm:pt-24 pb-28 md:pb-16">
         <div className="container mx-auto px-4">
           {/* Header Section */}
           <div className="mb-8 sm:mb-10 animate-fade-up">

@@ -18,6 +18,17 @@ interface Assessment {
   created_at: string;
 }
 
+const getAssessmentInfo = (type: string): { label: string; icon: string; bgColor: string; source: string | null } => {
+  const lower = type.toLowerCase();
+  const isAPI = lower.includes('_api');
+  const source = isAPI ? 'ML API' : lower.includes('_local') ? 'Local AI' : null;
+  
+  if (lower.includes('pcos')) return { label: 'PCOS Assessment', icon: '🩺', bgColor: 'bg-accent/15', source };
+  if (lower.includes('menopause')) return { label: 'Menopause Assessment', icon: '🌸', bgColor: 'bg-primary/15', source };
+  if (lower.includes('menstrual')) return { label: 'Menstrual Health', icon: '📅', bgColor: 'bg-teal/15', source };
+  return { label: type.replace(/_/g, ' '), icon: '💊', bgColor: 'bg-muted', source };
+};
+
 const Profile = () => {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
@@ -103,7 +114,7 @@ const Profile = () => {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      <main className="pt-24 pb-16">
+      <main className="pt-24 pb-28 md:pb-16">
         <div className="container mx-auto px-4 max-w-2xl">
           <div className="flex items-center gap-3 mb-8">
             <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center">
@@ -142,17 +153,38 @@ const Profile = () => {
               <p className="text-muted-foreground text-sm">No assessments yet. Complete a health module to see your history.</p>
             ) : (
               <div className="space-y-3">
-                {assessments.map((a) => (
-                  <div key={a.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
-                    <div>
-                      <span className="font-medium text-foreground capitalize">{a.assessment_type}</span>
-                      <p className="text-xs text-muted-foreground">{new Date(a.created_at).toLocaleDateString()}</p>
+                {assessments.map((a) => {
+                  const info = getAssessmentInfo(a.assessment_type);
+                  const riskColor = (a.risk_score ?? 0) <= 30 ? "text-teal" : (a.risk_score ?? 0) <= 60 ? "text-accent" : "text-destructive";
+                  const riskBg = (a.risk_score ?? 0) <= 30 ? "bg-teal/10" : (a.risk_score ?? 0) <= 60 ? "bg-accent/10" : "bg-destructive/10";
+                  const riskLabel = (a.risk_score ?? 0) <= 30 ? "Low Risk" : (a.risk_score ?? 0) <= 60 ? "Moderate" : "High Risk";
+                  return (
+                    <div key={a.id} className="flex items-center gap-3 p-3 sm:p-4 rounded-xl bg-muted/50 border border-border/50">
+                      <div className={`w-10 h-10 rounded-xl ${info.bgColor} flex items-center justify-center flex-shrink-0`}>
+                        <span className="text-lg">{info.icon}</span>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="font-semibold text-foreground text-sm">{info.label}</span>
+                          {info.source && (
+                            <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground border border-border">
+                              {info.source}
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          {new Date(a.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                          {' · '}
+                          {new Date(a.created_at).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
+                        </p>
+                      </div>
+                      <div className="flex flex-col items-end flex-shrink-0">
+                        <span className={`text-lg font-bold ${riskColor}`}>{a.risk_score}%</span>
+                        <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${riskBg} ${riskColor}`}>{riskLabel}</span>
+                      </div>
                     </div>
-                    <span className={`text-sm font-semibold ${a.risk_category === "low" ? "text-teal" : a.risk_category === "medium" ? "text-accent" : "text-destructive"}`}>
-                      {a.risk_score}%
-                    </span>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>
