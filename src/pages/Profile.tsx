@@ -18,6 +18,17 @@ interface Assessment {
   created_at: string;
 }
 
+const getAssessmentInfo = (type: string): { label: string; icon: string; bgColor: string; source: string | null } => {
+  const lower = type.toLowerCase();
+  const isAPI = lower.includes('_api');
+  const source = isAPI ? 'ML API' : lower.includes('_local') ? 'Local AI' : null;
+  
+  if (lower.includes('pcos')) return { label: 'PCOS Assessment', icon: '🩺', bgColor: 'bg-accent/15', source };
+  if (lower.includes('menopause')) return { label: 'Menopause Assessment', icon: '🌸', bgColor: 'bg-primary/15', source };
+  if (lower.includes('menstrual')) return { label: 'Menstrual Health', icon: '📅', bgColor: 'bg-teal/15', source };
+  return { label: type.replace(/_/g, ' '), icon: '💊', bgColor: 'bg-muted', source };
+};
+
 const Profile = () => {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
