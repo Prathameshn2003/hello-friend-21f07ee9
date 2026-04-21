@@ -1,11 +1,7 @@
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
-import { 
-  Activity, Droplets, ChevronRight, Thermometer,
-  Stethoscope, FileText, BookOpen, Calendar,
-  Heart, Sun, Moon, Sparkles, Clock
+import {
+  Activity, Droplets, Thermometer, Sun, Moon,
 } from "lucide-react";
-import logoImg from "@/assets/logo.png";
-import { Link } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useCycleTracking } from "@/hooks/useCycleTracking";
 import { useHealthAssessments } from "@/hooks/useHealthAssessments";
@@ -14,28 +10,32 @@ import { supabase } from "@/integrations/supabase/client";
 import { differenceInDays, parseISO, format } from "date-fns";
 import { useMemo } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
-
-const dashboardSections = [
-  { icon: FileText, title: "Medical Reports", description: "Upload & manage documents", path: "/dashboard/documents", color: "text-accent", bgColor: "bg-accent/15" },
-  { icon: Stethoscope, title: "Find Doctors", description: "Connect with specialists", path: "/doctors", color: "text-teal", bgColor: "bg-teal/15" },
-  { icon: BookOpen, title: "Health Resources", description: "Educational content", path: "/health-resources", color: "text-primary", bgColor: "bg-primary/15" },
-  { icon: FileText, title: "Govt. Schemes", description: "Explore health benefits", path: "/schemes", color: "text-accent", bgColor: "bg-accent/15" },
-];
+import { AIInsightHero } from "@/components/dashboard/AIInsightHero";
+import { QuickActions } from "@/components/dashboard/QuickActions";
+import { HealthOverviewCards, HealthCard } from "@/components/dashboard/HealthOverviewCards";
+import { CycleChart } from "@/components/dashboard/CycleChart";
+import { HealthScoreRing } from "@/components/dashboard/HealthScoreRing";
+import { TodaySnapshot, SnapshotItem } from "@/components/dashboard/TodaySnapshot";
+import { RecentActivity, ActivityItem } from "@/components/dashboard/RecentActivity";
+import { AskAIBox } from "@/components/dashboard/AskAIBox";
+import { CycleCalendar } from "@/components/menstrual/CycleCalendar";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Calendar as CalendarIcon } from "lucide-react";
 
 const getRiskColor = (category: string | null) => {
   if (!category) return "text-muted-foreground";
   const lower = category.toLowerCase();
   if (lower === "high" || lower === "severe") return "text-destructive";
-  if (lower === "moderate" || lower === "medium") return "text-accent";
-  return "text-teal";
+  if (lower === "moderate" || lower === "medium") return "text-warning";
+  return "text-success";
 };
 
 const getRiskLabel = (category: string | null) => {
   if (!category) return null;
   const lower = category.toLowerCase();
-  if (lower === "high" || lower === "severe") return "High Risk";
-  if (lower === "moderate" || lower === "medium") return "Moderate Risk";
-  if (lower === "low" || lower === "none") return "Low Risk";
+  if (lower === "high" || lower === "severe") return "🔴 High Risk";
+  if (lower === "moderate" || lower === "medium") return "🟠 Moderate Risk";
+  if (lower === "low" || lower === "none") return "🟢 Low Risk";
   return category;
 };
 
@@ -51,8 +51,7 @@ const Dashboard = () => {
   const { user } = useAuth();
   const { cycleLogs, loading: cycleLoading, insights, prediction } = useCycleTracking();
   const { pcosAssessment, menopauseAssessment, menstrualAssessment, loading: assessmentLoading } = useHealthAssessments();
-  
-  // Also fetch the latest active cycle_prediction directly for faster updates
+
   const { data: latestPrediction } = useQuery({
     queryKey: ["cycle-predictions", user?.id],
     queryFn: async () => {
@@ -69,7 +68,21 @@ const Dashboard = () => {
     enabled: !!user,
   });
 
-  const userName = user?.user_metadata?.full_name?.split(' ')[0] || 'there';
+  const { data: recentDocs } = useQuery({
+    queryKey: ["dashboard-documents", user?.id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("documents")
+        .select("id, file_name, uploaded_at")
+        .eq("user_id", user!.id)
+        .order("uploaded_at", { ascending: false })
+        .limit(3);
+      return data ?? [];
+    },
+    enabled: !!user,
+  });
+
+  const userName = user?.user_metadata?.full_name?.split(" ")[0] || "there";
   const loading = cycleLoading || assessmentLoading;
 
   const greeting = useMemo(() => {
@@ -80,86 +93,63 @@ const Dashboard = () => {
   }, []);
 
   const cycleData = useMemo(() => {
-    if (cycleLogs.length === 0) {
-      return { currentDay: null, cycleLength: 28, phase: "unknown" };
-    }
+    if (cycleLogs.length === 0) return { currentDay: null, cycleLength: 28, phase: "unknown", lastPeriod: "" };
     const latestCycle = cycleLogs[0];
     const cycleStart = parseISO(latestCycle.start_date);
     const today = new Date();
     const dayOfCycle = differenceInDays(today, cycleStart) + 1;
     const cycleLength = insights.averageCycleLength || 28;
-    const periodLength = latestCycle.period_length || insights.averagePeriodLength || 5;
-    const ovulationCenter = Math.round(cycleLength / 2);
-
-    let phase = "follicular";
-    if (dayOfCycle <= periodLength) phase = "menstrual";
-    else if (dayOfCycle >= ovulationCenter - 2 && dayOfCycle <= ovulationCenter + 2) phase = "ovulation";
-    else if (dayOfCycle > ovulationCenter + 2) phase = "luteal";
-
     return {
       currentDay: dayOfCycle > 0 && dayOfCycle <= cycleLength ? dayOfCycle : null,
       cycleLength,
-      phase,
+      phase: "follicular",
+      lastPeriod: latestCycle.start_date,
     };
   }, [cycleLogs, insights]);
 
-  // Get predicted date from multiple sources
   const menstrualPredictedDate = useMemo(() => {
-    // Source 1: Direct cycle_predictions table (fastest after assessment)
     if (latestPrediction?.predicted_start_date) {
       const parsed = parseISO(latestPrediction.predicted_start_date);
       const daysUntil = differenceInDays(parsed, new Date());
-      return {
-        date: format(parsed, "dd MMM yyyy"),
-        daysUntil: daysUntil > 0 ? daysUntil : 0,
-      };
+      return { date: format(parsed, "dd MMM yyyy"), daysUntil: daysUntil > 0 ? daysUntil : 0 };
     }
-    // Source 2: cycle tracking hook prediction
     if (prediction?.predicted_start_date) {
-      return {
-        date: format(parseISO(prediction.predicted_start_date), "dd MMM yyyy"),
-        daysUntil: prediction.days_until,
-      };
-    }
-    // Source 3: menstrual assessment recommendations
-    if (menstrualAssessment?.recommendations) {
-      const recs = menstrualAssessment.recommendations as Record<string, unknown>;
-      const nextDate = recs.next_date as string | undefined;
-      if (nextDate) {
-        try {
-          const parsed = new Date(nextDate);
-          if (!isNaN(parsed.getTime())) {
-            const daysUntil = differenceInDays(parsed, new Date());
-            return {
-              date: format(parsed, "dd MMM yyyy"),
-              daysUntil: daysUntil > 0 ? daysUntil : 0,
-            };
-          }
-        } catch {}
-      }
+      return { date: format(parseISO(prediction.predicted_start_date), "dd MMM yyyy"), daysUntil: prediction.days_until };
     }
     return null;
-  }, [latestPrediction, prediction, menstrualAssessment]);
+  }, [latestPrediction, prediction]);
 
-  // Build health cards from real data
-  const healthCards = useMemo(() => {
+  // Build AI insight
+  const aiInsight = useMemo(() => {
+    const parts: string[] = [];
+    if (cycleLogs.length > 0) parts.push(`Your cycle is ${insights.isRegular ? "regular" : "irregular"}.`);
+    if (pcosAssessment?.risk_category) {
+      const lower = pcosAssessment.risk_category.toLowerCase();
+      if (lower === "high") parts.push("PCOS risk is high — consider consulting a doctor.");
+      else if (lower === "moderate" || lower === "medium") parts.push("PCOS risk is moderate — lifestyle monitoring recommended.");
+      else parts.push("PCOS indicators look good.");
+    }
+    if (parts.length === 0) return "Complete an assessment to get personalized AI insights about your health.";
+    return parts.join(" ");
+  }, [insights, pcosAssessment]);
+
+  const alertText = menstrualPredictedDate?.daysUntil != null && menstrualPredictedDate.daysUntil <= 30
+    ? `Next period in ~${menstrualPredictedDate.daysUntil} days (${menstrualPredictedDate.date})`
+    : null;
+
+  const healthCards: HealthCard[] = useMemo(() => {
     const pcosRiskLabel = pcosAssessment ? getRiskLabel(pcosAssessment.risk_category) : null;
     const pcosScore = pcosAssessment?.risk_score != null ? Math.round(100 - pcosAssessment.risk_score) : null;
-    
     const menopauseStage = menopauseAssessment ? getMenopauseStage(menopauseAssessment.risk_category) : null;
-
-    // Menstrual assessment data
     const menstrualStatus = menstrualAssessment
-      ? (menstrualAssessment.risk_category === "low" ? "Regular" : "Irregular")
-      : (cycleData.currentDay ? `Day ${cycleData.currentDay} of Cycle` : null);
+      ? menstrualAssessment.risk_category === "low" ? "🟢 Regular" : "🟠 Irregular"
+      : cycleData.currentDay ? `Day ${cycleData.currentDay} of Cycle` : null;
 
     return [
       {
         title: "Menstrual Health",
         status: menstrualStatus || "Start tracking",
-        statusColor: menstrualAssessment
-          ? getRiskColor(menstrualAssessment.risk_category)
-          : (cycleData.currentDay ? "text-teal" : "text-muted-foreground"),
+        statusColor: menstrualAssessment ? getRiskColor(menstrualAssessment.risk_category) : (cycleData.currentDay ? "text-teal" : "text-muted-foreground"),
         icon: Droplets,
         iconBg: "bg-teal/15",
         iconColor: "text-teal",
@@ -167,12 +157,12 @@ const Dashboard = () => {
         hasData: !!menstrualAssessment || cycleLogs.length > 0,
         predictedDate: menstrualPredictedDate?.date || null,
         daysUntil: menstrualPredictedDate?.daysUntil ?? null,
-        metric: null as string | null,
-        metricLabel: null as string | null,
+        metric: null,
+        metricLabel: null,
       },
       {
         title: "PCOS Risk",
-        status: pcosRiskLabel || null,
+        status: pcosRiskLabel,
         statusColor: pcosAssessment ? getRiskColor(pcosAssessment.risk_category) : "text-muted-foreground",
         icon: Activity,
         iconBg: "bg-accent/15",
@@ -181,12 +171,12 @@ const Dashboard = () => {
         metric: pcosScore != null ? `${pcosScore}%` : null,
         metricLabel: "Health Score",
         hasData: !!pcosAssessment,
-        predictedDate: null as string | null,
-        daysUntil: null as number | null,
+        predictedDate: null,
+        daysUntil: null,
       },
       {
         title: "Menopause Stage",
-        status: menopauseStage || null,
+        status: menopauseStage,
         statusColor: menopauseAssessment ? getRiskColor(menopauseAssessment.risk_category) : "text-muted-foreground",
         icon: Thermometer,
         iconBg: "bg-primary/15",
@@ -195,22 +185,80 @@ const Dashboard = () => {
         metric: menopauseAssessment?.risk_score != null ? `${Math.round(menopauseAssessment.risk_score)}%` : null,
         metricLabel: "Risk Score",
         hasData: !!menopauseAssessment,
-        predictedDate: null as string | null,
-        daysUntil: null as number | null,
+        predictedDate: null,
+        daysUntil: null,
       },
     ];
-  }, [cycleData, cycleLogs, insights, pcosAssessment, menopauseAssessment, menstrualAssessment, menstrualPredictedDate]);
+  }, [cycleData, cycleLogs, pcosAssessment, menopauseAssessment, menstrualAssessment, menstrualPredictedDate]);
+
+  // Cycle chart data
+  const cycleChartData = useMemo(() => {
+    return [...cycleLogs]
+      .filter((c) => c.cycle_length)
+      .reverse()
+      .slice(-8)
+      .map((c, i) => ({ cycle: `C${i + 1}`, length: c.cycle_length || 28 }));
+  }, [cycleLogs]);
+
+  // Health score (composite)
+  const healthScore = useMemo(() => {
+    let score = 70; // baseline
+    if (pcosAssessment?.risk_score != null) score = Math.round((score + (100 - pcosAssessment.risk_score)) / 2);
+    if (menopauseAssessment?.risk_score != null) score = Math.round((score + (100 - menopauseAssessment.risk_score)) / 2);
+    if (cycleLogs.length > 0 && insights.isRegular) score = Math.min(100, score + 5);
+    if (cycleLogs.length > 0 && !insights.isRegular) score = Math.max(0, score - 10);
+    return score;
+  }, [pcosAssessment, menopauseAssessment, insights]);
+
+  // Today's snapshot
+  const snapshotItems: SnapshotItem[] = useMemo(() => {
+    const items: SnapshotItem[] = [];
+    items.push({
+      label: "Cycle",
+      value: cycleLogs.length === 0 ? "Not tracked" : insights.isRegular ? "Regular" : "Irregular",
+      status: cycleLogs.length === 0 ? "tip" : insights.isRegular ? "good" : "warn",
+    });
+    items.push({
+      label: "PCOS Status",
+      value: pcosAssessment ? (getRiskLabel(pcosAssessment.risk_category) || "Unknown") : "No assessment",
+      status: !pcosAssessment ? "tip" : pcosAssessment.risk_category?.toLowerCase() === "low" ? "good" : "warn",
+    });
+    items.push({
+      label: "Last Activity",
+      value: cycleLogs[0] ? format(parseISO(cycleLogs[0].start_date), "dd MMM yyyy") : "Log your first cycle",
+      status: cycleLogs[0] ? "good" : "tip",
+    });
+    return items;
+  }, [insights, pcosAssessment, cycleLogs]);
+
+  const suggestion = useMemo(() => {
+    if (!pcosAssessment) return "Take the PCOS assessment to get a personalized risk analysis.";
+    if (cycleLogs.length === 0) return "Log your period to start tracking your cycle patterns.";
+    if (cycleLogs.length > 0 && !insights.isRegular) return "Stay hydrated, sleep 7-8 hrs, and reduce stress for better cycle regularity.";
+    return "Keep up the great habits! Regular tracking helps detect changes early.";
+  }, [pcosAssessment, cycleLogs, insights]);
+
+  // Recent activity
+  const recentItems: ActivityItem[] = useMemo(() => {
+    const items: ActivityItem[] = [];
+    if (pcosAssessment) items.push({ id: pcosAssessment.id, type: "pcos", title: "PCOS Assessment", subtitle: getRiskLabel(pcosAssessment.risk_category) || "Completed", date: pcosAssessment.created_at });
+    if (menopauseAssessment) items.push({ id: menopauseAssessment.id, type: "menopause", title: "Menopause Assessment", subtitle: getMenopauseStage(menopauseAssessment.risk_category) || "Completed", date: menopauseAssessment.created_at });
+    if (menstrualAssessment) items.push({ id: menstrualAssessment.id, type: "menstrual", title: "Menstrual Assessment", subtitle: getRiskLabel(menstrualAssessment.risk_category) || "Completed", date: menstrualAssessment.created_at });
+    if (cycleLogs[0]) items.push({ id: cycleLogs[0].id, type: "cycle", title: "Period Logged", subtitle: `Started ${format(parseISO(cycleLogs[0].start_date), "dd MMM")}`, date: cycleLogs[0].created_at });
+    (recentDocs || []).forEach((d) => items.push({ id: d.id, type: "document", title: "Report Uploaded", subtitle: d.file_name, date: d.uploaded_at }));
+    return items.sort((a, b) => +new Date(b.date) - +new Date(a.date)).slice(0, 5);
+  }, [pcosAssessment, menopauseAssessment, menstrualAssessment, cycleLogs, recentDocs]);
 
   if (loading) {
     return (
       <DashboardLayout>
-        <div className="space-y-6 md:space-y-8">
+        <div className="space-y-6">
           <Skeleton className="h-48 rounded-2xl" />
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            {[1, 2, 3].map(i => <Skeleton key={i} className="h-44 rounded-xl" />)}
+          <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
+            {[1, 2, 3, 4, 5, 6].map((i) => <Skeleton key={i} className="h-20 rounded-xl" />)}
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-28 rounded-xl" />)}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            {[1, 2, 3].map((i) => <Skeleton key={i} className="h-44 rounded-xl" />)}
           </div>
         </div>
       </DashboardLayout>
@@ -219,124 +267,59 @@ const Dashboard = () => {
 
   return (
     <DashboardLayout>
-      <div className="space-y-6 md:space-y-8 animate-fade-up">
-        {/* Welcome Hero Section */}
-        <div className="relative overflow-hidden glass-card rounded-2xl p-5 sm:p-6 md:p-8 bg-gradient-to-br from-primary/10 via-secondary/10 to-teal/10">
-          <div className="absolute top-0 right-0 w-32 h-32 md:w-48 md:h-48 bg-primary/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
-          <div className="absolute bottom-0 left-0 w-24 h-24 md:w-32 md:h-32 bg-teal/20 rounded-full blur-2xl translate-y-1/2 -translate-x-1/2" />
-          
-          <div className="relative z-10">
-            <div className="flex items-center gap-2.5 mb-3 sm:mb-4">
-              <img src={logoImg} alt="NaariCare Logo" className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl shadow-lg object-contain" />
-              <span className="font-heading font-bold text-lg sm:text-xl text-foreground">
-                Naari<span className="text-accent">Care</span>
-              </span>
-            </div>
-            
-            <div className="flex items-center gap-2 text-muted-foreground mb-1.5 sm:mb-2">
-              <greeting.icon className="w-4 h-4" />
-              <span className="text-xs sm:text-sm">{greeting.text}</span>
-            </div>
-            <h1 className="font-heading text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-foreground mb-2 sm:mb-3">
-              Welcome back, {userName}! 👋
-            </h1>
-            <p className="text-muted-foreground text-xs sm:text-sm md:text-base max-w-lg">
-              Here's your personalized health summary. Track your cycle, monitor your health, and access resources all in one place.
-            </p>
-            
-            <div className="flex flex-wrap gap-2 sm:gap-4 mt-4 sm:mt-6">
-              <div className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-background/60 backdrop-blur-sm border border-border/50">
-                <Calendar className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary" />
-                <span className="text-xs sm:text-sm font-medium">
-                  {cycleLogs.length} {cycleLogs.length === 1 ? 'Cycle' : 'Cycles'} Logged
-                </span>
-              </div>
-              {cycleData.currentDay && (
-                <div className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-background/60 backdrop-blur-sm border border-border/50">
-                  <Heart className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-accent" />
-                  <span className="text-xs sm:text-sm font-medium">Day {cycleData.currentDay}</span>
-                </div>
-              )}
-            </div>
+      <div className="space-y-6 md:space-y-7">
+        {/* 1. AI Insight Hero */}
+        <AIInsightHero
+          userName={userName}
+          greeting={greeting}
+          aiInsight={aiInsight}
+          alertText={alertText}
+          cyclesLogged={cycleLogs.length}
+          currentDay={cycleData.currentDay}
+        />
+
+        {/* 2. Quick Actions */}
+        <QuickActions />
+
+        {/* 3. Health Overview Cards */}
+        <HealthOverviewCards cards={healthCards} />
+
+        {/* 4. Charts Section */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          <div className="lg:col-span-2">
+            <CycleChart data={cycleChartData} averageLength={insights.averageCycleLength || 28} />
           </div>
+          <HealthScoreRing score={healthScore} />
         </div>
 
-        {/* Health Modules */}
-        <div className="animate-fade-up" style={{ animationDelay: '100ms' }}>
-          <h2 className="font-heading text-base sm:text-lg md:text-xl font-semibold text-foreground mb-3 sm:mb-4">Health Modules</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
-            {healthCards.map((card, index) => (
-              <Link 
-                key={card.title} 
-                to={card.path} 
-                className="glass-card card-hover rounded-xl p-4 sm:p-5 group animate-fade-up"
-                style={{ animationDelay: `${(index + 1) * 75}ms` }}
-              >
-                <div className="flex items-start justify-between mb-3 sm:mb-4">
-                  <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl ${card.iconBg} flex items-center justify-center transition-all duration-300 group-hover:scale-110 group-hover:shadow-lg`}>
-                    <card.icon className={`w-5 h-5 sm:w-6 sm:h-6 ${card.iconColor}`} />
-                  </div>
-                  <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all duration-300" />
-                </div>
-                <h3 className="font-heading text-sm sm:text-base font-semibold text-foreground mb-1">{card.title}</h3>
-                
-                {card.hasData ? (
-                  <>
-                    <p className={`text-xs sm:text-sm font-medium ${card.statusColor} mb-2 sm:mb-3`}>{card.status}</p>
-                    {card.predictedDate ? (
-                      <div className="pt-2 sm:pt-3 border-t border-border px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg bg-primary/5 border-primary/10">
-                        <div className="flex items-center gap-1.5 mb-0.5">
-                          <Calendar className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-primary" />
-                          <span className="text-[10px] sm:text-xs font-medium text-primary">Next Period</span>
-                        </div>
-                        <div className="text-xs sm:text-sm font-semibold text-foreground">{card.predictedDate}</div>
-                        {card.daysUntil != null && card.daysUntil > 0 && (
-                          <div className="flex items-center gap-1 mt-0.5">
-                            <Clock className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-muted-foreground" />
-                            <span className="text-[10px] sm:text-xs text-muted-foreground">{card.daysUntil} days away</span>
-                          </div>
-                        )}
-                      </div>
-                    ) : card.metric ? (
-                      <div className="pt-2 sm:pt-3 border-t border-border">
-                        <div className="text-lg sm:text-xl font-bold gradient-text">{card.metric}</div>
-                        <div className="text-[10px] sm:text-xs text-muted-foreground mt-0.5">{card.metricLabel}</div>
-                      </div>
-                    ) : null}
-                  </>
-                ) : (
-                  <div className="mt-1.5 sm:mt-2">
-                    <p className="text-xs sm:text-sm text-muted-foreground mb-2 sm:mb-3">No assessment yet</p>
-                    <div className="pt-2 sm:pt-3 border-t border-border flex items-center gap-2 text-primary text-xs sm:text-sm font-medium">
-                      <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                      Start Assessment
-                    </div>
-                  </div>
-                )}
-              </Link>
-            ))}
+        {/* 5. Calendar + Today's Snapshot */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          <div className="lg:col-span-2">
+            <Card className="border-border/60">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base sm:text-lg font-heading flex items-center gap-2">
+                  <CalendarIcon className="w-4 h-4 text-primary" />
+                  Cycle Calendar
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <CycleCalendar
+                  lastPeriod={cycleData.lastPeriod}
+                  avgCycle={insights.averageCycleLength || 28}
+                  periodDuration={insights.averagePeriodLength || 5}
+                />
+              </CardContent>
+            </Card>
           </div>
+          <TodaySnapshot items={snapshotItems} suggestion={suggestion} />
         </div>
 
-        {/* Quick Resources Grid */}
-        <div className="animate-fade-up" style={{ animationDelay: '400ms' }}>
-          <h2 className="font-heading text-base sm:text-lg md:text-xl font-semibold text-foreground mb-3 sm:mb-4">Quick Access</h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3 md:gap-4">
-            {dashboardSections.map((section, index) => (
-              <Link 
-                key={section.title} 
-                to={section.path} 
-                className="glass-card card-hover rounded-xl p-3 sm:p-4 md:p-5 group text-center"
-                style={{ animationDelay: `${(index + 5) * 50}ms` }}
-              >
-                <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl ${section.bgColor} flex items-center justify-center mx-auto mb-2 sm:mb-3 transition-all duration-300 group-hover:scale-110 group-hover:shadow-md`}>
-                  <section.icon className={`w-5 h-5 sm:w-6 sm:h-6 ${section.color}`} />
-                </div>
-                <h3 className="font-medium text-foreground text-xs sm:text-sm mb-0.5 sm:mb-1">{section.title}</h3>
-                <p className="text-[10px] sm:text-xs text-muted-foreground hidden sm:block">{section.description}</p>
-              </Link>
-            ))}
+        {/* 6. Recent Activity + Ask AI */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          <div className="lg:col-span-2">
+            <RecentActivity items={recentItems} />
           </div>
+          <AskAIBox />
         </div>
       </div>
     </DashboardLayout>
