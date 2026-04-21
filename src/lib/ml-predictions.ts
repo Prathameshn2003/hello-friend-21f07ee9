@@ -4,7 +4,40 @@
  * Falls back to local TypeScript logic if API is unavailable
  */
 
+import { supabase } from "@/integrations/supabase/client";
+
 const ML_API_BASE = (import.meta as any).env?.VITE_ML_API_URL ?? "http://localhost:8000";
+const USE_EDGE_FUNCTION = !((import.meta as any).env?.VITE_ML_API_URL);
+
+// Call ML through Supabase edge function (production) or direct (local dev)
+async function callML(modelType: 'pcos' | 'menopause' | 'cycle', input: any, endpoint: string) {
+  if (USE_EDGE_FUNCTION) {
+    const { data, error } = await supabase.functions.invoke('ml-predict', {
+      body: { model_type: modelType, input_data: input },
+    });
+    if (error) throw new Error(error.message);
+    if (!data) throw new Error('No response from ml-predict');
+    if (data.fallback) throw new Error(data.error ?? 'fallback');
+    return data;
+  }
+  // Direct call (local dev)
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 15000);
+  try {
+    const res = await fetch(`${ML_API_BASE}${endpoint}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(input),
+      signal: controller.signal,
+    });
+    clearTimeout(timeoutId);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const json = await res.json();
+    return { prediction: json.prediction ?? json, fallback: false };
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
 
 // ── Shared ──────────────────────────────────────────────────────────────────
 export interface MLPredictionMeta { usedAPI: boolean; error?: string; }
@@ -114,11 +147,8 @@ export function predictMenopause(data: MenopauseInputData): MenopauseResult {
 // ════════════════════════════════════════════════════════════════════════════
 export async function predictPCOSFromAPI(data: PCOSInputData): Promise<PCOSResult & { _meta: MLPredictionMeta }> {
   try {
-    const res  = await fetch(`${ML_API_BASE}/pcos/predict`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data) });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const json = await res.json();
-    if (json.fallback) throw new Error(json.error ?? "fallback");
-    const p        = json.prediction;
+    const json = await callML('pcos', data, '/pcos/predict');
+    const p = json.prediction;
     const severity: PCOSResult['severity'] = p.severity === 'high' ? 'high' : p.severity === 'medium' ? 'medium' : p.severity === 'low' ? 'low' : 'none';
     const result: PCOSResult = { hasPCOS: p.hasPCOS ?? false, riskPercentage: p.riskPercentage ?? 0, severity, breakdown: p.breakdown ?? { cycleScore:0, hormonalScore:0, ultrasoundScore:0, metabolicScore:0 }, recommendations: p.recommendations ?? getPCOSRecommendations(severity) };
     return { ...result, _meta: { usedAPI: true } };
@@ -128,16 +158,10 @@ export async function predictPCOSFromAPI(data: PCOSInputData): Promise<PCOSResul
   }
 }
 
-// ════════════════════════════════════════════════════════════════════════════
-// API — MENOPAUSE  →  POST /menopause/predict
-// ════════════════════════════════════════════════════════════════════════════
 export async function predictMenopauseFromAPI(data: MenopauseInputData): Promise<MenopauseResult & { _meta: MLPredictionMeta }> {
   try {
-    const res  = await fetch(`${ML_API_BASE}/menopause/predict`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data) });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const json = await res.json();
-    if (json.fallback) throw new Error(json.error ?? "fallback");
-    const p     = json.prediction;
+    const json = await callML('menopause', data, '/menopause/predict');
+    const p = json.prediction;
     const stage: MenopauseResult['stage'] = p.stage === 'Post-Menopause' ? 'Post-Menopause' : p.stage === 'Peri-Menopause' ? 'Peri-Menopause' : 'Pre-Menopause';
     const result: MenopauseResult = { stage, riskPercentage: p.riskPercentage ?? 0, hasMenopauseSymptoms: p.hasMenopauseSymptoms ?? stage !== 'Pre-Menopause', breakdown: p.breakdown ?? { ageScore:0, hormoneScore:0, symptomScore:0, periodScore:0 }, recommendations: p.recommendations ?? getMenopauseRecommendations(stage) };
     return { ...result, _meta: { usedAPI: true } };
@@ -147,9 +171,7 @@ export async function predictMenopauseFromAPI(data: MenopauseInputData): Promise
   }
 }
 
-// ════════════════════════════════════════════════════════════════════════════
-// CYCLE (local only — menstrual uses separate MenstrualModule)
-// ════════════════════════════════════════════════════════════════════════════
+// CYCLE (local)
 export function predictNextCycle(data: CycleData): CyclePrediction {
   const { cycleHistory, lastPeriodStart, stressLevel, sleepHours, symptoms } = data;
   if (cycleHistory.length === 0) { const d = new Date(lastPeriodStart); d.setDate(d.getDate()+28); return { predictedStartDate: d, confidenceLevel: 'low', averageCycleLength: 28, cycleVariability: 0, isIrregular: false, pcosRiskFlag: false, delayAdjustment: 0 }; }
