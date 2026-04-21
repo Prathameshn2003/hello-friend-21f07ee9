@@ -122,7 +122,7 @@ const Dashboard = () => {
   // Build AI insight
   const aiInsight = useMemo(() => {
     const parts: string[] = [];
-    if (insights.regularity) parts.push(`Your cycle is ${insights.regularity}.`);
+    if (cycleLogs.length > 0) parts.push(`Your cycle is ${insights.isRegular ? "regular" : "irregular"}.`);
     if (pcosAssessment?.risk_category) {
       const lower = pcosAssessment.risk_category.toLowerCase();
       if (lower === "high") parts.push("PCOS risk is high — consider consulting a doctor.");
@@ -205,8 +205,8 @@ const Dashboard = () => {
     let score = 70; // baseline
     if (pcosAssessment?.risk_score != null) score = Math.round((score + (100 - pcosAssessment.risk_score)) / 2);
     if (menopauseAssessment?.risk_score != null) score = Math.round((score + (100 - menopauseAssessment.risk_score)) / 2);
-    if (insights.regularity === "regular") score = Math.min(100, score + 5);
-    if (insights.regularity === "very irregular") score = Math.max(0, score - 10);
+    if (cycleLogs.length > 0 && insights.isRegular) score = Math.min(100, score + 5);
+    if (cycleLogs.length > 0 && !insights.isRegular) score = Math.max(0, score - 10);
     return score;
   }, [pcosAssessment, menopauseAssessment, insights]);
 
@@ -215,8 +215,8 @@ const Dashboard = () => {
     const items: SnapshotItem[] = [];
     items.push({
       label: "Cycle",
-      value: insights.regularity ? insights.regularity.charAt(0).toUpperCase() + insights.regularity.slice(1) : "Not tracked",
-      status: insights.regularity === "regular" ? "good" : insights.regularity ? "warn" : "tip",
+      value: cycleLogs.length === 0 ? "Not tracked" : insights.isRegular ? "Regular" : "Irregular",
+      status: cycleLogs.length === 0 ? "tip" : insights.isRegular ? "good" : "warn",
     });
     items.push({
       label: "PCOS Status",
@@ -234,7 +234,7 @@ const Dashboard = () => {
   const suggestion = useMemo(() => {
     if (!pcosAssessment) return "Take the PCOS assessment to get a personalized risk analysis.";
     if (cycleLogs.length === 0) return "Log your period to start tracking your cycle patterns.";
-    if (insights.regularity && insights.regularity !== "regular") return "Stay hydrated, sleep 7-8 hrs, and reduce stress for better cycle regularity.";
+    if (cycleLogs.length > 0 && !insights.isRegular) return "Stay hydrated, sleep 7-8 hrs, and reduce stress for better cycle regularity.";
     return "Keep up the great habits! Regular tracking helps detect changes early.";
   }, [pcosAssessment, cycleLogs, insights]);
 
