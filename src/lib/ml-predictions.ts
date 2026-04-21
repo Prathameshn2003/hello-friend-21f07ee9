@@ -4,7 +4,40 @@
  * Falls back to local TypeScript logic if API is unavailable
  */
 
+import { supabase } from "@/integrations/supabase/client";
+
 const ML_API_BASE = (import.meta as any).env?.VITE_ML_API_URL ?? "http://localhost:8000";
+const USE_EDGE_FUNCTION = !((import.meta as any).env?.VITE_ML_API_URL);
+
+// Call ML through Supabase edge function (production) or direct (local dev)
+async function callML(modelType: 'pcos' | 'menopause' | 'cycle', input: any, endpoint: string) {
+  if (USE_EDGE_FUNCTION) {
+    const { data, error } = await supabase.functions.invoke('ml-predict', {
+      body: { model_type: modelType, input_data: input },
+    });
+    if (error) throw new Error(error.message);
+    if (!data) throw new Error('No response from ml-predict');
+    if (data.fallback) throw new Error(data.error ?? 'fallback');
+    return data;
+  }
+  // Direct call (local dev)
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 15000);
+  try {
+    const res = await fetch(`${ML_API_BASE}${endpoint}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(input),
+      signal: controller.signal,
+    });
+    clearTimeout(timeoutId);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const json = await res.json();
+    return { prediction: json.prediction ?? json, fallback: false };
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
 
 // ── Shared ──────────────────────────────────────────────────────────────────
 export interface MLPredictionMeta { usedAPI: boolean; error?: string; }
